@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fundamentals of Visual Reporting — Fall 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17171b;
+    --paper:#f4f3ef;
+    --slate:#6f6f78;
+    --rule:#d9d6cd;
+    --signal:#0f7a72;
+    --signal-soft:rgba(15,122,114,.10);
+    --display:"Space Grotesk",system-ui,-apple-system,sans-serif;
+    --body:"Newsreader",Georgia,"Times New Roman",serif;
+    --mono:"Space Mono",ui-monospace,Menlo,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:1.075rem;
+    line-height:1.62;
+    font-weight:400;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{
+    max-width:880px;
+    margin:0 auto;
+    padding:clamp(1.25rem,4vw,3rem) clamp(1.1rem,5vw,2.5rem) 5rem;
+  }
+
+  a{color:var(--signal);text-decoration:none;border-bottom:1px solid var(--signal-soft);transition:border-color .15s ease;}
+  a:hover{border-bottom-color:var(--signal);}
+  a:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:2px;}
+
+  .mono{font-family:var(--mono);}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    padding:clamp(1.75rem,5vw,3rem) clamp(1.1rem,4vw,2.25rem);
+    margin-bottom:3.5rem;
+  }
+  .hero .corner{position:absolute;width:18px;height:18px;border:2px solid var(--ink);}
+  .hero .corner.tl{top:0;left:0;border-right:0;border-bottom:0;}
+  .hero .corner.tr{top:0;right:0;border-left:0;border-bottom:0;}
+  .hero .corner.bl{bottom:0;left:0;border-right:0;border-top:0;}
+  .hero .corner.br{bottom:0;right:0;border-left:0;border-top:0;}
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:.7rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--slate);
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+    flex-wrap:wrap;
+  }
+  .rec{display:inline-flex;align-items:center;gap:.4rem;color:var(--signal);}
+  .rec .dot{width:8px;height:8px;border-radius:50%;background:var(--signal);display:inline-block;animation:pulse 2.4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+
+  h1{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:clamp(2.3rem,8.5vw,4.4rem);
+    line-height:1.02;
+    letter-spacing:-.02em;
+    margin:1.1rem 0 .9rem;
+  }
+  .tagline{
+    font-size:clamp(1.05rem,2.6vw,1.3rem);
+    color:var(--ink);
+    max-width:34ch;
+    font-style:italic;
+    margin:0 0 1.5rem;
+    color:#3a3a40;
+  }
+  .specs{
+    font-family:var(--mono);
+    font-size:.78rem;
+    letter-spacing:.04em;
+    color:var(--ink);
+    display:flex;
+    flex-wrap:wrap;
+    gap:.35rem .9rem;
+    border-top:1px solid var(--rule);
+    padding-top:1rem;
+  }
+  .specs span{white-space:nowrap;}
+  .specs b{font-weight:700;color:var(--slate);font-weight:400;}
+
+  /* ---------- CONTACT CARD ---------- */
+  .contact{
+    border:1.5px solid var(--ink);
+    margin-bottom:3.5rem;
+  }
+  .contact .label{
+    font-family:var(--mono);
+    font-size:.66rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--paper);
+    background:var(--ink);
+    padding:.55rem 1rem;
+  }
+  .contact .grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:0;
+  }
+  .contact .cell{
+    padding:1rem 1.1rem;
+    border-top:1px solid var(--rule);
+    border-right:1px solid var(--rule);
+  }
+  .contact .cell:nth-child(2n){border-right:0;}
+  .contact .k{
+    font-family:var(--mono);
+    font-size:.64rem;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+    color:var(--slate);
+    display:block;
+    margin-bottom:.25rem;
+  }
+  .contact .v{font-size:.98rem;line-height:1.4;}
+  .contact .v.full{font-size:1.05rem;}
+  .contact .span2{grid-column:1 / -1;border-right:0;}
+
+  /* ---------- SECTIONS ---------- */
+  section{margin-bottom:3.25rem;}
+  h2{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:clamp(1.3rem,3.4vw,1.7rem);
+    letter-spacing:-.01em;
+    margin:0 0 1rem;
+    display:flex;
+    align-items:baseline;
+    gap:.7rem;
+  }
+  h2 .num{
+    font-family:var(--mono);
+    font-size:.72rem;
+    font-weight:700;
+    color:var(--signal);
+    letter-spacing:.05em;
+    transform:translateY(-.15em);
+  }
+  section p{margin:0 0 1rem;}
+  section p:last-child{margin-bottom:0;}
+
+  ul.clean{list-style:none;margin:0 0 1rem;padding:0;}
+  ul.clean li{
+    position:relative;
+    padding-left:1.5rem;
+    margin-bottom:.5rem;
+  }
+  ul.clean li::before{
+    content:"";
+    position:absolute;
+    left:0;top:.62em;
+    width:8px;height:1.5px;
+    background:var(--signal);
+  }
+
+  .callout{
+    border-left:3px solid var(--signal);
+    background:var(--signal-soft);
+    padding:.85rem 1.1rem;
+    margin:1.25rem 0;
+    font-size:.98rem;
+  }
+  .callout strong{font-family:var(--display);font-weight:600;}
+
+  .flag{
+    border:1.5px dashed var(--slate);
+    padding:.85rem 1.1rem;
+    margin:1.25rem 0;
+    font-family:var(--mono);
+    font-size:.78rem;
+    line-height:1.5;
+    color:var(--slate);
+  }
+
+  /* ---------- ASSIGNMENTS ---------- */
+  .proj{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:.4rem 1.1rem;
+    margin:1.25rem 0;
+    align-items:baseline;
+  }
+  .proj .tag{
+    font-family:var(--mono);
+    font-size:.66rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--signal);
+    border:1px solid var(--signal);
+    padding:.18rem .45rem;
+    white-space:nowrap;
+    align-self:start;
+    margin-top:.15rem;
+  }
+
+  /* ---------- GRADING ---------- */
+  .grades{margin:1rem 0 0;}
+  .grade-row{
+    display:grid;
+    grid-template-columns:2.5rem 1fr;
+    gap:1rem;
+    padding:.85rem 0;
+    border-top:1px solid var(--rule);
+    align-items:start;
+  }
+  .grade-row:last-child{border-bottom:1px solid var(--rule);}
+  .grade-row .letter{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:1.6rem;
+    line-height:1;
+    color:var(--signal);
+  }
+
+  /* ---------- SCHEDULE TIMELINE ---------- */
+  .schedule{margin-top:1.5rem;}
+  .phase{
+    font-family:var(--mono);
+    font-size:.7rem;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--ink);
+    padding:.5rem 0;
+    margin-top:1.5rem;
+    border-top:2px solid var(--ink);
+    display:flex;
+    justify-content:space-between;
+  }
+  .phase:first-child{margin-top:0;}
+  .phase .sub{color:var(--slate);}
+
+  .clip{
+    display:grid;
+    grid-template-columns:5.5rem 1fr;
+    gap:0 1.25rem;
+    padding:1.05rem 0;
+    border-bottom:1px solid var(--rule);
+    position:relative;
+  }
+  .clip .time{
+    font-family:var(--mono);
+    font-size:.78rem;
+    line-height:1.3;
+    color:var(--ink);
+    padding-top:.15rem;
+  }
+  .clip .time .day{display:block;font-size:.62rem;letter-spacing:.12em;color:var(--slate);text-transform:uppercase;margin-top:.15rem;}
+  .clip .num{
+    position:absolute;
+    left:0;top:-.55rem;
+    font-family:var(--mono);
+    font-size:.6rem;
+    font-weight:700;
+    color:var(--signal);
+    letter-spacing:.05em;
+  }
+  .clip .topic{font-size:1.02rem;line-height:1.4;margin:0 0 .5rem;}
+  .clip .topic .lead{font-family:var(--display);font-weight:600;}
+  .clip .hw{
+    font-size:.9rem;
+    color:#42424a;
+    display:flex;
+    gap:.55rem;
+    align-items:baseline;
+  }
+  .clip .hw .hwlabel{
+    font-family:var(--mono);
+    font-size:.6rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--slate);
+    white-space:nowrap;
+    border:1px solid var(--rule);
+    padding:.1rem .35rem;
+    transform:translateY(-.05em);
+  }
+  .clip .hw.working{color:var(--slate);font-style:italic;}
+
+  .slug{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    padding:.7rem 0;
+    border-bottom:1px dashed var(--rule);
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.06em;
+    color:var(--slate);
+    text-transform:uppercase;
+  }
+  .slug .bar{flex:0 0 5.5rem;border-top:1px dashed var(--slate);height:1px;}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    margin-top:4rem;
+    padding-top:1.5rem;
+    border-top:2px solid var(--ink);
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.05em;
+    color:var(--slate);
+    line-height:1.7;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:560px){
+    .contact .grid{grid-template-columns:1fr;}
+    .contact .cell{border-right:0;}
+    .clip{grid-template-columns:1fr;gap:.45rem;}
+    .clip .time{padding-top:0;display:flex;align-items:baseline;gap:.6rem;}
+    .clip .time .day{margin-top:0;}
+    .clip .num{position:static;display:block;margin-bottom:.1rem;}
+    .slug .bar{flex-basis:2rem;}
+    .proj{grid-template-columns:1fr;gap:.35rem;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HERO -->
+  <header class="hero">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+    <div class="eyebrow">
+      <span class="rec"><span class="dot"></span>Fall 2026</span>
+      <span>·</span>
+      <span>Craig Newmark Graduate School of Journalism</span>
+    </div>
+    <h1>Fundamentals of Visual Reporting</h1>
+    <p class="tagline">A platform-agnostic introduction to telling true stories in photo and video.</p>
+    <div class="specs">
+      <span><b>Course</b> JOUR&nbsp;71107</span>
+      <span><b>Meets</b> Fridays 10:00&nbsp;AM&nbsp;–&nbsp;12:50&nbsp;PM</span>
+      <span><b>Room</b> TBA</span>
+      <span><b>Aug&nbsp;28&nbsp;–&nbsp;Dec&nbsp;18</b></span>
+    </div>
+  </header>
+
+  <!-- CONTACT -->
+  <div class="contact">
+    <div class="label">Instructor — Travis Fox</div>
+    <div class="grid">
+      <div class="cell span2">
+        <span class="k">Email</span>
+        <span class="v full"><a href="mailto:travis.fox@journalism.cuny.edu">travis.fox@journalism.cuny.edu</a></span>
+      </div>
+      <div class="cell">
+        <span class="k">Cell — call or text anytime</span>
+        <span class="v">202-299-6010</span>
+      </div>
+      <div class="cell">
+        <span class="k">Office — drop in</span>
+        <span class="v">#422 (end of the faculty hallway)</span>
+      </div>
+      <div class="cell">
+        <span class="k">Schedule a meeting</span>
+        <span class="v"><a href="https://meet.travisfox.com">meet.travisfox.com</a></span>
+      </div>
+      <div class="cell">
+        <span class="k">Zoom</span>
+        <span class="v"><a href="https://zoom.travisfox.com">zoom.travisfox.com</a></span>
+      </div>
+      <div class="cell span2">
+        <span class="k">Anonymous feedback — always welcome</span>
+        <span class="v full"><a href="https://docs.google.com/forms/d/e/1FAIpQLScsxrw9jVM8E_vRkMwTMBaHXVF_zizjJ2mamPGB0wEXT4jnaQ/viewform?usp=header">Submit feedback</a></span>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <h2><span class="num">01</span>Course summary</h2>
+    <p>This class is a platform-agnostic introduction to the editorial and technical skills of photo and video. We'll use audio, photo, video, and words to tell stories — both news and features. Class exercises and field assignments give you room to practice and develop these skills. You'll get hands-on experience shooting photos with your smartphone, shooting video with the Canon C100, and editing in Adobe Premiere.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span>What you'll learn</h2>
+    <ul class="clean">
+      <li>How visual storytelling differs from print and audio</li>
+      <li>The basics of news photography</li>
+      <li>Reporting and interviewing specifically for video</li>
+      <li>How to shoot high-quality video that tells a story</li>
+      <li>Clear, concise script writing</li>
+      <li>Adobe Premiere editing software</li>
+      <li>The many forms of visual journalism: news, documentary, explainer, social, and more</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span>What you need before class starts</h2>
+    <p>Get <strong>two hard drives</strong> — one working drive, one to back it up. There are only two kinds of hard drives: one that has just failed and one that is about to. A cloud drive works as your backup if you'll commit to the upload time. Always bring your drives and current footage to class.</p>
+    <p>You'll each be issued a <strong>Canon C100</strong> for the entire semester. If the equipment room hasn't reached you, contact me. The kit is your responsibility all semester long — I'll ask you to bring it to some classes, but not all.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span>Diversity, equity &amp; inclusion</h2>
+    <p>I've deliberately chosen topics, examples, and assignments that ask you to engage with a diversity of voices, perspectives, and lived experiences. In this space we stay open to learning and growth and commit to treating each other with courtesy and respect.</p>
+    <p>As journalists, you'll be expected to consider people and viewpoints you don't agree with — I'll purposely bring controversial topics into class. During discussions, respect each other's unique lived experiences and points of view, aim to be thoughtfully critical of the work and not the person, and always be kind.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span>Accommodations</h2>
+    <p>If I can help accommodate any need or challenge — physical, social, or otherwise — please let me know. Any student who needs accommodations should register with the Office of Student Affairs in room 307 as soon as possible. Accommodations are not retroactive.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">06</span>Deadlines</h2>
+    <p>All work is due <strong>Wednesday at midnight</strong> unless otherwise noted. File everything in the class Google Drive folder <a href="#" aria-label="Class Google Drive folder link to be added">[link to be added]</a>.</p>
+    <p>In journalism, deadlines arrive regularly and without mercy. They are serious business — check the first citation in Merriam-Webster. Please regard them with awe. Don't think about missing them.</p>
+    <p>Plan ahead. It almost always takes more time than you think to finish an assignment, so don't leave anything until the last minute. If you're having trouble reaching a source, finding information, or shooting or editing, contact me <strong>at least 48 hours before a deadline</strong> and we'll work out a solution together.</p>
+    <div class="callout">
+      <p style="margin:0;">I want to help you succeed, but I'm not a fan of last-minute excuses — in the professional world they cost you respect. <strong>A late assignment automatically drops your grade by a half grade</strong> (e.g., from an A to an A-).</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">07</span>Attendance</h2>
+    <p>Attendance is mandatory, and an unexcused absence will lower your grade. So will arriving late on a regular basis. Job interviews, work obligations, computer problems, routine medical appointments, advisor meetings, transportation issues, and even scheduled source interviews are not valid reasons for missing class — these count as unexcused absences. Only a personal illness or a family emergency is a valid reason to miss a class.</p>
+    <p>My best advice: the subway is always late. Just plan on arriving early — and if it's actually on time, you can catch up on work.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">08</span>Assignments &amp; exercises</h2>
+    <p>Two <strong>exercises</strong> get you comfortable with the tools, and two <strong>video assignments</strong> carry the semester. Each assignment moves through pitch&nbsp;→&nbsp;rough&nbsp;→&nbsp;final, and you'll fold my feedback on the rough into the final cut.</p>
+    <div class="proj">
+      <span class="tag">Exercises</span>
+      <span>Shooting (the 5×5) and Editing — your first reps with the camera and with Premiere.</span>
+      <span class="tag">Assignment 1</span>
+      <span>The <strong>"on-the-job" profile.</strong></span>
+      <span class="tag">Assignment 2</span>
+      <span>The <strong>final story.</strong> Pick any form — a documentary, a news piece, an explainer, a series of social videos (2–3), a combination of those, or something new.</span>
+    </div>
+    <p>During the photo unit (weeks 1–4) you'll also turn in a weekly photo assignment. And throughout the semester, you'll contribute material for class and our Slack channel at least three times.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">09</span>Grading</h2>
+    <div class="grades">
+      <div class="grade-row">
+        <span class="letter">A</span>
+        <span>Turns in all work on time, comes to all classes on time, participates, and incorporates feedback from the rough edit into the final.</span>
+      </div>
+      <div class="grade-row">
+        <span class="letter">B</span>
+        <span>Turns in more than one assignment or exercise late, misses (or is late to) class, <em>or</em> doesn't incorporate feedback.</span>
+      </div>
+      <div class="grade-row">
+        <span class="letter">C</span>
+        <span>Consistently turns in work late, <em>or</em> consistently misses (or is late to) class, <em>or</em> fails to incorporate feedback.</span>
+      </div>
+      <div class="grade-row">
+        <span class="letter">F</span>
+        <span>Consistently turns in work late <em>and</em> misses (or is late to) class <em>and</em> doesn't incorporate feedback.</span>
+      </div>
+    </div>
+    <p style="margin-top:1rem;font-size:.95rem;color:var(--slate);">Pluses or minuses for students between grades, or for submitting more or less material for class and the Slack channel.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">10</span>Week by week</h2>
+    <div class="schedule">
+
+      <div class="phase"><span>Photo</span><span class="sub">Weeks 1–4</span></div>
+
+      <div class="clip">
+        <span class="num">CLASS 01</span>
+        <div class="time">08.28<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Cameras &amp; composition.</span> Seeing photographically, image analysis, getting the most from your phone.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>Photo #1 — repetition, lines, vantage point, framing</span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 02</span>
+        <div class="time">09.04<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Powerful news photos &amp; post-production.</span> Seeing moments — emotion, action, interaction; captioning; ethical &amp; legal topics.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>Photo #2 — emotion, action, interaction</span></div>
+        </div>
+      </div>
+
+      <div class="slug"><span class="bar"></span><span>Sep 11 — No class · Rosh Hashanah (CUNY: no classes Sep 11–13)</span></div>
+
+      <div class="clip">
+        <span class="num">CLASS 03</span>
+        <div class="time">09.18<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">News &amp; features.</span> Types of news photos, portrait exercise, rephotography.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>Photo #3 — meetings, speeches, events</span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 04</span>
+        <div class="time">09.25<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Telling stories with multiple photos.</span> Picture stories, editing exercise, street photography.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>Photo #4 — New Yorkers at work</span></div>
+        </div>
+      </div>
+
+      <div class="phase"><span>Video</span><span class="sub">Weeks 5–15</span></div>
+
+      <div class="clip">
+        <span class="num">CLASS 05</span>
+        <div class="time">10.02<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Video begins — shooting.</span> Motion, sequences, scenes.</p>
+          <div class="hw"><span class="hwlabel">Exercise</span><span>5×5 — five ~5-second shots that build one sequence. Bring the footage to class 6.</span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 06</span>
+        <div class="time">10.09<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Pitching 101 + Premiere 1.</span> Import/export, in/out points, organizing bins, navigating tools — editing your 5×5.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>Edit exercise (cut your 5×5) + On-the-job profile: <strong>pitch</strong></span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 07</span>
+        <div class="time">10.16<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Interviewing &amp; reporting + Premiere 2.</span> Requesting and pre-interviewing subjects, open-ended questions; timeline, tracks, L/J edits, audio.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>On-the-job profile: <strong>rough</strong></span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 08</span>
+        <div class="time">10.23<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Scriptwriting 101 + Premiere 3.</span> Constructing a story; audio editing, transitions, polish.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>On-the-job profile: <strong>final</strong></span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 09</span>
+        <div class="time">10.30<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Visual storytelling formats.</span> News-to-doc continuum, social, explainers; pitch review &amp; discussion.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>Final story: <strong>pitch</strong></span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 10</span>
+        <div class="time">11.06<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Producing + Interviewing II.</span> Pre-production, scouting, shotlists, the field; interview editing and how interviews serve stories.</p>
+          <div class="hw working"><span class="hwlabel">Studio</span><span>Working / shoot week</span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 11</span>
+        <div class="time">11.13<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Advanced camera technique + Premiere 4.</span> Peaking, zebra, exposure tools; graphics and basic animation.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>Final story: <strong>rough</strong></span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 12</span>
+        <div class="time">11.20<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Archival &amp; the fine cut.</span> Photo/archival treatment, fair use &amp; archival; Premiere 5 — fine-cut techniques, troubleshooting sticking points.</p>
+          <div class="hw working"><span class="hwlabel">Studio</span><span>Working / edit week</span></div>
+        </div>
+      </div>
+
+      <div class="slug"><span class="bar"></span><span>Nov 27 — No class · Thanksgiving (college closed Nov 26–27)</span></div>
+
+      <div class="clip">
+        <span class="num">CLASS 13</span>
+        <div class="time">12.04<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">AI in video.</span> AI tools in production and editing, the ethics of AI-generated imagery, disclosure &amp; transparency.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>Final story: <strong>final</strong></span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 14</span>
+        <div class="time">12.11<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Workshop.</span> One-on-one edit reviews; newscast prep.</p>
+          <div class="hw working"><span class="hwlabel">Studio</span><span>Polish week</span></div>
+        </div>
+      </div>
+
+      <div class="clip">
+        <span class="num">CLASS 15</span>
+        <div class="time">12.18<span class="day">Fri</span></div>
+        <div>
+          <p class="topic"><span class="lead">Newscast.</span> We close the semester in the studio with a mock newscast — filling and swapping newsroom roles.</p>
+          <div class="hw"><span class="hwlabel">HW</span><span>All pieces wrapped</span></div>
+        </div>
+      </div>
+
+    </div>
+    <p style="margin-top:1.5rem;font-size:.9rem;color:var(--slate);">This syllabus may be updated. I'll let you know if anything is added or changed.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">11</span>Additional technical support</h2>
+    <p>In addition to me, reach out to our in-house video coaches. They're well versed in everything from camera setup to the technical side of Premiere — they're here to help you, so take advantage of it.</p>
+    <div class="flag">[ CONFIRM ] Video coaches &amp; emails — the most recent listing was Andre Ward (andre.ward@journalism.cuny.edu) and Andrew Shepard (andrew.shepard@journalism.cuny.edu). Verify who's coaching this fall before publishing. Also add the link to the custom Adobe Premiere lesson here.</div>
+  </section>
+
+  <section>
+    <h2><span class="num">12</span>Plagiarism, fabrication &amp; AI</h2>
+    <p>Don't borrow the work of others and claim it as your own. Don't fabricate content and present it as truth. Don't use quotes without attributing them to their sources, and avoid using images and video without permission. If you do use material made by others with permission, credit the source — out of respect for the creators, and so your audience knows where it came from.</p>
+    <p>On AI: you may not use generative AI to produce reporting or writing you present as your own. Any permitted use of AI tools must be disclosed — we'll cover the ethics and disclosure norms in our AI in video session.</p>
+    <p>If you have any doubts about something you're considering, come see me before you cross to the dark side. I'm generally pro-AI and I'd love to see how you use it. But I'll have no patience for using AI in a way that the class believes is your own work without disclosing it. Better to figure out an ethically sound way to do something than to risk your credibility, reputation, and career. For the full Code of Ethics, see <a href="https://www.journalism.cuny.edu/current-students/code-of-ethics/">the Code of Ethics website</a>.</p>
+  </section>
+
+  <footer>
+    JOUR 71107 · Fundamentals of Visual Reporting · Fall 2026<br>
+    Craig Newmark Graduate School of Journalism at CUNY · Travis Fox
+  </footer>
+
+</div>
+</body>
+</html>
