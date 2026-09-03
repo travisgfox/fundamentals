@@ -219,6 +219,49 @@
     color:var(--slate);
   }
 
+  /* ---------- TECH HELPER BOT ---------- */
+  .botbox{border:1.5px solid var(--ink);background:#fff;margin:1.5rem 0 1rem;}
+  .botbox .label{
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--paper);background:var(--ink);padding:.55rem 1rem;
+    display:flex;justify-content:space-between;align-items:center;gap:.75rem;
+  }
+  .botbox .label .rec{color:var(--paper);opacity:.75;}
+  #botlog{
+    padding:1rem 1.1rem;max-height:26rem;overflow-y:auto;
+    display:flex;flex-direction:column;gap:.85rem;font-size:.97rem;line-height:1.55;
+  }
+  #botlog:empty{display:none;}
+  .msg{max-width:100%;}
+  .msg .who{
+    font-family:var(--mono);font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--slate);display:block;margin-bottom:.2rem;
+  }
+  .msg.you .bubble{background:var(--signal-soft);border-left:3px solid var(--signal);padding:.6rem .8rem;}
+  .msg.bot .bubble{padding:0 0 0 .1rem;}
+  .msg .bubble p{margin:0 0 .55rem;}
+  .msg .bubble p:last-child{margin-bottom:0;}
+  .msg.err .bubble{color:#a4342b;font-size:.92rem;}
+  .botform{display:flex;gap:.5rem;border-top:1px solid var(--rule);padding:.75rem;}
+  .botform input{
+    flex:1;font-family:var(--body);font-size:1rem;padding:.6rem .7rem;
+    border:1px solid var(--rule);border-radius:2px;background:var(--paper);color:var(--ink);
+  }
+  .botform input:focus{outline:2px solid var(--signal);outline-offset:1px;border-color:var(--signal);}
+  .botform button{
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.6rem 1rem;border:0;background:var(--ink);color:var(--paper);cursor:pointer;border-radius:2px;
+  }
+  .botform button:disabled{opacity:.45;cursor:default;}
+  .botnote{font-size:.85rem;color:var(--slate);margin:.6rem 0 0;}
+  .botsugg{display:flex;flex-wrap:wrap;gap:.4rem;padding:0 .75rem .75rem;}
+  .botsugg button{
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;
+    padding:.35rem .6rem;border:1px solid var(--rule);background:transparent;
+    color:var(--slate);cursor:pointer;border-radius:2px;
+  }
+  .botsugg button:hover{border-color:var(--signal);color:var(--signal);}
+
   /* ---------- ASSIGNMENTS ---------- */
   .proj{
     display:grid;
@@ -660,7 +703,103 @@
     <h2><span class="num">11</span>Additional technical support</h2>
     <p>In addition to me, reach out to our in-house video coaches. They're well versed in everything from camera setup to the technical side of Premiere — they're here to help you, so take advantage of it.</p>
     <p>This semester's video coaches are Andre Ward (<a href="mailto:andre.ward@journalism.cuny.edu">andre.ward@journalism.cuny.edu</a>) and Andrew Shepard (<a href="mailto:andrew.shepard@journalism.cuny.edu">andrew.shepard@journalism.cuny.edu</a>).</p>
+
+    <p>For quick technical questions at 2am, there's also a helper below. It knows the Canon C200 manual and our tech team's Premiere tutorial series, and it will point you to the exact video and timestamp when the answer is in there.</p>
+
+    <div class="botbox">
+      <div class="label"><span>Tech helper &mdash; C200 &amp; Premiere</span><span class="rec">Ask anything technical</span></div>
+      <div id="botlog"></div>
+      <div class="botsugg" id="botsugg">
+        <button type="button">How do I set my scratch disk?</button>
+        <button type="button">My audio is only in one ear</button>
+        <button type="button">How do I blur someone's face?</button>
+        <button type="button">What ND filter should I use?</button>
+      </div>
+      <form class="botform" id="botform" autocomplete="off">
+        <input id="botinput" type="text" placeholder="e.g. Why does my export look soft?" aria-label="Ask a technical question" maxlength="1500">
+        <button type="submit" id="botsend">Ask</button>
+      </form>
+    </div>
+
+    <p class="botnote">Questions you type here go to an AI assistant set up for this course. It's a technical aid for camera and Premiere questions &mdash; it doesn't do your reporting or writing, and it can be wrong. Don't put anything sensitive in it. For anything about assignments, deadlines or grading, ask me.</p>
   </section>
+
+  <script>
+  (function(){
+    var ENDPOINT = "https://fundamentals-helper.travisgfox.workers.dev/";
+    var log = document.getElementById('botlog');
+    var form = document.getElementById('botform');
+    var input = document.getElementById('botinput');
+    var send = document.getElementById('botsend');
+    var sugg = document.getElementById('botsugg');
+    var history = [];
+    var busy = false;
+
+    function esc(s){
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function render(text){
+      var safe = esc(text);
+      safe = safe.replace(/(https?:\/\/[^\s<)]+)/g, function(u){
+        var trail = ''; var m = u.match(/[.,;:]+$/);
+        if(m){ trail = m[0]; u = u.slice(0, -trail.length); }
+        return '<a href="'+u+'" target="_blank" rel="noopener">'+u+'</a>'+trail;
+      });
+      safe = safe.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+      return safe.split(/\n{2,}/).map(function(p){
+        return '<p>'+p.replace(/\n/g,'<br>')+'</p>';
+      }).join('');
+    }
+    function add(role, text, isErr){
+      var d = document.createElement('div');
+      d.className = 'msg ' + (role==='you' ? 'you' : 'bot') + (isErr ? ' err' : '');
+      d.innerHTML = '<span class="who">'+(role==='you'?'You':'Helper')+'</span>'
+                  + '<div class="bubble">'+(role==='you'? '<p>'+esc(text)+'</p>' : render(text))+'</div>';
+      log.appendChild(d);
+      log.scrollTop = log.scrollHeight;
+      return d;
+    }
+
+    async function ask(q){
+      if(busy || !q) return;
+      busy = true; send.disabled = true; input.value = '';
+      if(sugg) sugg.style.display = 'none';
+      add('you', q);
+      var pending = add('bot', 'Thinking...');
+      try{
+        var r = await fetch(ENDPOINT, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ question:q, history: history.slice(-6) })
+        });
+        var data = await r.json().catch(function(){ return {}; });
+        if(!r.ok || !data.answer){
+          pending.className = 'msg bot err';
+          pending.querySelector('.bubble').innerHTML =
+            '<p>'+esc(data.error || "The helper isn't reachable right now. Try again in a minute, or email one of the video coaches.")+'</p>';
+        } else {
+          pending.querySelector('.bubble').innerHTML = render(data.answer);
+          history.push({role:'user', text:q});
+          history.push({role:'model', text:data.answer});
+        }
+      } catch(e){
+        pending.className = 'msg bot err';
+        pending.querySelector('.bubble').innerHTML =
+          '<p>Could not reach the helper. Check your connection and try again.</p>';
+      }
+      busy = false; send.disabled = false;
+      log.scrollTop = log.scrollHeight;
+      input.focus();
+    }
+
+    form.addEventListener('submit', function(e){ e.preventDefault(); ask(input.value.trim()); });
+    if(sugg){
+      sugg.addEventListener('click', function(e){
+        if(e.target.tagName === 'BUTTON') ask(e.target.textContent.trim());
+      });
+    }
+  })();
+  </script>
 
   <section>
     <h2><span class="num">12</span>Plagiarism, fabrication &amp; AI</h2>
