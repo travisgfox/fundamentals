@@ -163,6 +163,26 @@
     transform-origin:top left;
   }
 
+
+  /* ---------- INLINE SUBMISSION ---------- */
+  a.sub{font-family:var(--mono);font-size:.7rem;letter-spacing:.03em;white-space:nowrap;margin-left:.35rem;}
+  .subform{margin:.7rem 0 .3rem;border:1px solid var(--rule);background:#fff;padding:.9rem;max-width:560px;display:flex;flex-direction:column;gap:.5rem;}
+  .subform .ttl{font-family:var(--display);font-weight:600;font-size:1rem;}
+  .subform label{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);}
+  .subform input, .subform textarea{font-family:var(--body);font-size:.95rem;padding:.45rem .55rem;border:1px solid var(--rule);background:#fff;color:var(--ink);width:100%;box-sizing:border-box;}
+  .subform input[type=file]{padding:.35rem;}
+  .subform textarea{min-height:200px;resize:vertical;line-height:1.45;}
+  .subform input:focus, .subform textarea:focus{outline:2px solid var(--signal);outline-offset:-2px;}
+  .subform .row{display:flex;gap:.5rem;align-items:center;justify-content:space-between;}
+  .subform button{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);background:var(--ink);border:0;padding:.5rem 1rem;cursor:pointer;}
+  .subform button:hover{background:var(--signal);}
+  .subform button:disabled{opacity:.45;cursor:default;}
+  .subform .note{font-family:var(--mono);font-size:.62rem;color:var(--slate);letter-spacing:.03em;line-height:1.5;}
+  .subform .err{font-family:var(--mono);font-size:.68rem;color:#b3261e;}
+  .subform .ok{color:var(--signal);font-weight:700;font-family:var(--display);}
+  .subform .prog{height:8px;background:var(--signal-soft);}
+  .subform .prog .bar{height:100%;width:0;background:var(--signal);transition:width .3s;}
+
   /* ---------- SECTIONS ---------- */
   section{margin-bottom:3.25rem;}
   h2{
@@ -497,7 +517,7 @@
 
   <section>
     <h2><span class="num">06</span>Deadlines</h2>
-    <p>All work is due <strong>Wednesday at midnight</strong> unless otherwise noted. File everything in the class Google Drive folder <a href="#" aria-label="Class Google Drive folder link to be added">[link to be added]</a>.</p>
+    <p>All work is due <strong>Wednesday at midnight</strong> unless otherwise noted. Turn in video work with the <strong>Upload</strong> link and pitches with the <strong>Submit pitch</strong> link next to each assignment in the schedule below — it goes straight to me. Use your @journalism.cuny.edu email; no sign-in needed.</p>
     <p>In journalism, deadlines arrive regularly and without mercy. They are serious business — check the first citation in Merriam-Webster. Please regard them with awe. Don't think about missing them.</p>
     <p>Plan ahead. It almost always takes more time than you think to finish an assignment, so don't leave anything until the last minute. If you're having trouble reaching a source, finding information, or shooting or editing, contact me <strong>at least 48 hours before a deadline</strong> and we'll work out a solution together.</p>
     <div class="callout">
@@ -602,7 +622,7 @@
         <div class="time">10.02<span class="day">Fri</span></div>
         <div>
           <p class="topic"><span class="lead">Video begins — shooting.</span> Motion, sequences, scenes.</p>
-          <div class="hw"><span class="hwlabel">Exercise</span><span>5×5 — five ~5-second shots that build one sequence. Bring the footage to class 6.</span></div>
+          <div class="hw"><span class="hwlabel">Exercise</span><span>5×5 — five ~5-second shots that build one sequence — due Wed Oct 7. Bring the footage to class 6 too. <a class="sub" href="#" data-asg="shoot-5x5">Upload clips ↓</a></span></div>
         </div>
       </div>
 
@@ -611,7 +631,7 @@
         <div class="time">10.09<span class="day">Fri</span></div>
         <div>
           <p class="topic"><span class="lead">Pitching 101 + Premiere 1.</span> Import/export, in/out points, organizing bins, navigating tools — editing your 5×5.</p>
-          <div class="hw"><span class="hwlabel">HW</span><span>Edit exercise (cut your 5×5) + On-the-job profile: <strong>pitch</strong></span></div>
+          <div class="hw"><span class="hwlabel">HW</span><span>Edit exercise (cut your 5×5) + On-the-job profile: <strong>pitch</strong> — due Wed Oct 14. <a class="sub" href="#" data-asg="edit-5x5">Upload edit ↓</a> <a class="sub" href="#" data-asg="otj-pitch">Submit pitch ↓</a></span></div>
         </div>
       </div>
 
@@ -620,7 +640,7 @@
         <div class="time">10.16<span class="day">Fri</span></div>
         <div>
           <p class="topic"><span class="lead">Interviewing &amp; reporting + Premiere 2.</span> Requesting and pre-interviewing subjects, open-ended questions; timeline, tracks, L/J edits, audio.</p>
-          <div class="hw"><span class="hwlabel">HW</span><span>On-the-job profile: <strong>rough</strong></span></div>
+          <div class="hw"><span class="hwlabel">HW</span><span>On-the-job profile: <strong>rough</strong> — due Wed Oct 21. <a class="sub" href="#" data-asg="otj-rough">Upload ↓</a></span></div>
         </div>
       </div>
 
@@ -629,7 +649,7 @@
         <div class="time">10.23<span class="day">Fri</span></div>
         <div>
           <p class="topic"><span class="lead">Scriptwriting 101 + Premiere 3.</span> Constructing a story; audio editing, transitions, polish.</p>
-          <div class="hw"><span class="hwlabel">HW</span><span>On-the-job profile: <strong>final</strong></span></div>
+          <div class="hw"><span class="hwlabel">HW</span><span>On-the-job profile: <strong>final</strong> — due Wed Oct 28. <a class="sub" href="#" data-asg="otj-final">Upload ↓</a></span></div>
         </div>
       </div>
 
@@ -638,7 +658,7 @@
         <div class="time">10.30<span class="day">Fri</span></div>
         <div>
           <p class="topic"><span class="lead">Visual storytelling formats.</span> News-to-doc continuum, social, explainers; pitch review &amp; discussion.</p>
-          <div class="hw"><span class="hwlabel">HW</span><span>Final story: <strong>pitch</strong></span></div>
+          <div class="hw"><span class="hwlabel">HW</span><span>Final story: <strong>pitch</strong> — due Wed Nov 4. <a class="sub" href="#" data-asg="final-pitch">Submit pitch ↓</a></span></div>
         </div>
       </div>
 
@@ -655,7 +675,7 @@
         <div class="time">11.13<span class="day">Fri</span></div>
         <div>
           <p class="topic"><span class="lead">Advanced camera technique + Premiere 4.</span> Peaking, zebra, exposure tools; graphics and basic animation.</p>
-          <div class="hw"><span class="hwlabel">HW</span><span>Final story: <strong>rough</strong></span></div>
+          <div class="hw"><span class="hwlabel">HW</span><span>Final story: <strong>rough</strong> — due Wed Nov 18. <a class="sub" href="#" data-asg="final-rough">Upload ↓</a></span></div>
         </div>
       </div>
 
@@ -674,7 +694,7 @@
         <div class="time">12.04<span class="day">Fri</span></div>
         <div>
           <p class="topic"><span class="lead">AI in video.</span> AI tools in production and editing, the ethics of AI-generated imagery, disclosure &amp; transparency.</p>
-          <div class="hw"><span class="hwlabel">HW</span><span>Final story: <strong>final</strong></span></div>
+          <div class="hw"><span class="hwlabel">HW</span><span>Final story: <strong>final</strong> — due Wed Dec 9. <a class="sub" href="#" data-asg="final-final">Upload ↓</a></span></div>
         </div>
       </div>
 
@@ -814,5 +834,170 @@
   </footer>
 
 </div>
+<script>
+/* =========================================================================
+   ASSIGNMENT SUBMISSION — inline panel under each homework line
+   Talks to a Google Apps Script web app that runs as Travis (source kept
+   private). Video goes straight from the browser into Travis's Drive, in
+   32 MB chunks so a dropped connection resumes instead of starting over.
+   Pitches become a Google Doc shared back to the student for comments.
+   ========================================================================= */
+(function () {
+  var API = 'https://script.google.com/macros/s/AKfycbyvB8Lv2BiFlCt9qhdtMTAA5C_ij_d_eEmXgISLn2UbE85neKnj_Gh967GhfVmL0RRJ/exec';
+  var CHUNK = 32 * 1024 * 1024;               // must be a multiple of 256 KB
+  var PITCH = { 'otj-pitch': 1, 'final-pitch': 1 };
+  var MULTI = { 'shoot-5x5': 1 };             // raw clips: several files at once
+  var busy = 0;
+
+  function mem(k, v) {
+    try { if (v === undefined) return localStorage.getItem(k) || ''; localStorage.setItem(k, v); } catch (e) {}
+    return '';
+  }
+  function api(o) {
+    return fetch(API, { method: 'POST', body: JSON.stringify(o) }).then(function (r) { return r.json(); });
+  }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function mb(n) { return n >= 1073741824 ? (n / 1073741824).toFixed(2) + ' GB' : Math.round(n / 1048576) + ' MB'; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  window.addEventListener('beforeunload', function (e) { if (busy) { e.preventDefault(); e.returnValue = ''; } });
+
+  // One PUT to the resumable-upload URL. blob=null asks Google how much it has.
+  function put(url, blob, start, total, onprog) {
+    return new Promise(function (resolve, reject) {
+      var x = new XMLHttpRequest();
+      x.open('PUT', url);
+      x.setRequestHeader('Content-Range', blob ? 'bytes ' + start + '-' + (start + blob.size - 1) + '/' + total : 'bytes */' + total);
+      if (onprog) x.upload.onprogress = function (ev) { if (ev.lengthComputable) onprog(start + ev.loaded); };
+      x.onload = function () { resolve(x); };
+      x.onerror = function () { reject(new Error('network')); };
+      x.send(blob || null);
+    });
+  }
+  function received(x, fallback) {
+    var r = null;
+    try { r = x.getResponseHeader('Range'); } catch (e) {}
+    var m = r && r.match(/bytes=0-(\d+)/);
+    return m ? +m[1] + 1 : fallback;
+  }
+  function parse(x) { try { return JSON.parse(x.responseText) || {}; } catch (e) { return {}; } }
+
+  async function upload(file, url, progress, say) {
+    var total = file.size, off = 0, fails = 0;
+    while (true) {
+      var end = Math.min(off + CHUNK, total), x = null;
+      try { x = await put(url, file.slice(off, end), off, total, progress); } catch (e) {}
+      if (x && (x.status === 200 || x.status === 201)) { progress(total); return parse(x); }
+      if (x && x.status === 308) { off = received(x, end); fails = 0; progress(off); continue; }
+      if (x && (x.status === 404 || x.status === 410)) throw new Error('The upload expired. Start again.');
+      if (++fails > 6) throw new Error('The upload keeps failing. Check your connection and try again.');
+      say('Connection hiccup — retrying (' + fails + '/6)…');
+      await sleep(Math.min(30000, 1000 * Math.pow(2, fails)));
+      try {
+        var q = await put(url, null, 0, total);
+        if (q.status === 200 || q.status === 201) { progress(total); return parse(q); }
+        if (q.status === 308) off = received(q, off);
+      } catch (e) {}
+    }
+  }
+
+  function panel(a) {
+    var key = a.dataset.asg, pitch = !!PITCH[key], multi = !!MULTI[key];
+    var box = document.createElement('form');
+    box.className = 'subform';
+    box.setAttribute('data-asg', key);
+    box.noValidate = false;
+    box.innerHTML =
+      '<span class="ttl">' + esc(a.textContent.replace('↓', '').trim()) + '</span>' +
+      '<label>Your name</label><input name="nm" required autocomplete="name">' +
+      '<label>Your email</label><input name="em" type="email" required autocomplete="email" placeholder="first.last00@journalism.cuny.edu">' +
+      (pitch
+        ? '<label>Working title</label><input name="tt" required maxlength="150">' +
+          '<label>Your pitch</label><textarea name="tx" required placeholder="Paste your full pitch — who, what, why now, your access, and what we\'ll see."></textarea>' +
+          '<span class="note">Formatting is kept as paragraphs. You\'ll get a Google Doc of your pitch shared with you — that\'s where my comments will appear.</span>'
+        : (multi
+          ? '<label>Your clips (select all five)</label><input name="fl" type="file" multiple required accept=".mp4,.mov,.m4v,.mxf,video/*">' +
+            '<span class="note">Straight from the card is fine (MP4, MOV or MXF). Keep this tab open until it says Received.</span>'
+          : '<label>Video file (MP4 or MOV)</label><input name="fl" type="file" required accept=".mp4,.mov,.m4v,video/mp4,video/quicktime">' +
+            '<span class="note">Export from Premiere as H.264 (Match Source – High Bitrate). Max 20 GB. Keep this tab open until it says Received.</span>') +
+          '<div class="prog" hidden><div class="bar"></div></div>') +
+      '<span class="err" hidden></span>' +
+      '<div class="row"><span class="note st">Goes to Travis only</span><button type="submit">' + (pitch ? 'Submit pitch' : 'Upload') + '</button></div>';
+    box.em.value = mem('fvr-email');
+    box.nm.value = mem('fvr-name');
+
+    var btn = box.querySelector('button'), st = box.querySelector('.st'), err = box.querySelector('.err');
+    function fail(m) { err.textContent = m; err.hidden = false; btn.disabled = false; btn.textContent = 'Try again'; }
+    function done(r, extra) {
+      box.innerHTML = '<span class="ok">Received ✓</span>' +
+        '<span class="note">' + esc(r.assignment) + ' · ' + esc(r.student) + ' · ' + esc(r.when) + ' · ' + esc(r.status) + '.<br>' +
+        'Sending a new version later is fine — I\'ll look at your latest.' + (extra || '') + '</span>';
+    }
+
+    box.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      err.hidden = true;
+      var email = box.em.value.trim().toLowerCase(), who = box.nm.value.trim();
+      mem('fvr-email', email); mem('fvr-name', who);
+      btn.disabled = true;
+
+      if (pitch) {
+        btn.textContent = 'Sending…';
+        try {
+          var r = await api({ action: 'pitch', assignment: key, email: email, who: who, title: box.tt.value, text: box.tx.value });
+          if (!r.ok) return fail(r.error);
+          done(r, '<br>Check your CUNY email for the shared doc.');
+        } catch (e) { fail('Could not reach the server. Check your connection and try again.'); }
+        return;
+      }
+
+      var files = Array.prototype.slice.call(box.fl.files);
+      if (!files.length) return fail('Choose a video file first.');
+      var totalBytes = files.reduce(function (t, f) { return t + f.size; }, 0), doneBytes = 0, last = null;
+      var prog = box.querySelector('.prog'), bar = prog.firstChild, t0 = Date.now();
+      busy++;
+      try {
+        for (var k = 0; k < files.length; k++) {
+          var file = files[k], tag = files.length > 1 ? ' (' + (k + 1) + ' of ' + files.length + ')' : '';
+          btn.textContent = 'Starting…';
+          var s = await api({ action: 'start', assignment: key, email: email, who: who, fileName: file.name, size: file.size, mimeType: file.type });
+          if (!s.ok) { busy--; return fail((files.length > 1 ? file.name + ': ' : '') + s.error); }
+          prog.hidden = false;
+          btn.textContent = 'Uploading…';
+          var f = await upload(file, s.uploadUrl, function (n) {
+            var sent = doneBytes + n, pct = Math.floor(100 * sent / totalBytes), secs = (Date.now() - t0) / 1000;
+            bar.style.width = pct + '%';
+            var eta = sent > 0 && secs > 5 ? Math.round((totalBytes - sent) / (sent / secs) / 60) : null;
+            st.textContent = pct + '% · ' + mb(sent) + ' of ' + mb(totalBytes) + tag + (eta !== null && pct < 100 ? ' · ~' + (eta < 1 ? '<1' : eta) + ' min left' : '');
+          }, function (m) { st.textContent = m; });
+          st.textContent = 'Checking…' + tag;
+          var d = await api({ action: 'done', assignment: key, email: email, who: who, fileId: f.id || '', name: s.name });
+          if (!d.ok) { busy--; return fail(d.error); }
+          doneBytes += file.size; last = d;
+        }
+        busy--;
+        done(last, files.length > 1 ? '<br>' + files.length + ' clips received.' : '');
+      } catch (e) {
+        busy--;
+        fail(e.message === 'Failed to fetch' ? 'Could not reach the server. Check your connection and try again.' : e.message);
+      }
+    });
+    return box;
+  }
+
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a.sub');
+    if (!a || !a.dataset.asg) return;
+    e.preventDefault();
+    var row = a.closest('.hw') || a.parentElement;
+    var open = row.parentElement.querySelector('.subform[data-asg="' + a.dataset.asg + '"]');
+    if (open) { if (!busy) open.remove(); return; }
+    var box = panel(a);
+    row.parentElement.insertBefore(box, row.nextSibling);
+    box.querySelector('input').focus();
+  });
+})();
+
+</script>
 </body>
 </html>
