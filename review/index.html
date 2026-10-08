@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Review Station — Fundamentals</title>
+<style>
+  :root{
+    --bg:#111315; --panel:#1a1d20; --panel2:#22262a; --line:#2e3338;
+    --text:#e8eaed; --muted:#9aa0a6; --accent:#4f9cf9; --rec:#e5484d; --ok:#3fb950; --warn:#d29922;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+    font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  button{font:inherit;color:inherit;background:var(--panel2);border:1px solid var(--line);
+    border-radius:6px;padding:6px 12px;cursor:pointer}
+  button:hover:not(:disabled){border-color:#4a5158}
+  button:disabled{opacity:.4;cursor:default}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.rec{background:var(--rec);border-color:var(--rec);color:#fff}
+  .app{display:grid;grid-template-columns:300px 1fr;height:100vh}
+  aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+  aside header{padding:14px;border-bottom:1px solid var(--line)}
+  aside h1{font-size:15px;margin:0 0 8px}
+  .folderline{font-size:12px;color:var(--muted);margin-top:8px;word-break:break-all}
+  .filters{display:flex;gap:6px;margin-top:10px}
+  .filters button{padding:3px 10px;font-size:12px}
+  .filters button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  #queue{overflow:auto;flex:1;padding:6px 0}
+  .group{padding:10px 14px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;border-left:3px solid transparent}
+  .item:hover{background:var(--panel2)}
+  .item.active{background:var(--panel2);border-left-color:var(--accent)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none}
+  .item.done .dot{background:var(--ok)}
+  .item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .sz{font-size:11px;color:var(--muted)}
+  main{display:flex;flex-direction:column;min-width:0;min-height:0}
+  .top{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line)}
+  .top .title{flex:1;min-width:0}
+  .top .title b{font-size:16px}
+  .top .title div{color:var(--muted);font-size:12px}
+  #recState{font-weight:600;color:var(--muted)}
+  #recState.on{color:var(--rec)}
+  .stagewrap{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;min-height:0;position:relative}
+  .screen{position:relative;background:#000;border-radius:4px;overflow:hidden;width:640px;height:360px}
+  .screen video,.screen canvas{position:absolute;inset:0;width:100%;height:100%}
+  .screen video{object-fit:contain}
+  #overlay{cursor:none}
+  #diag{font-size:11px;color:var(--muted)}
+  .empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);text-align:center;padding:30px;pointer-events:none}
+  .transport{display:flex;align-items:center;gap:10px;padding:10px 18px;border-top:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+  #scrub{flex:1;min-width:120px;accent-color:var(--accent)}
+  #tc{font-variant-numeric:tabular-nums;min-width:110px;text-align:center}
+  .meter{width:70px;height:8px;background:var(--panel2);border-radius:4px;overflow:hidden}
+  .meter i{display:block;height:100%;width:0;background:var(--ok)}
+  label.sm{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .bottom{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line);height:170px}
+  .bottom section{padding:10px 18px;overflow:auto}
+  .bottom section+section{border-left:1px solid var(--line)}
+  .bottom h3{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .keys{font-size:12px;color:var(--muted);columns:2}
+  kbd{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:0 5px;font:11px ui-monospace,Menlo,monospace;color:var(--text)}
+  #markers{list-style:none;margin:0;padding:0;font-size:13px}
+  #markers li{padding:2px 0}
+  #markers .t{color:var(--accent);font-variant-numeric:tabular-nums;cursor:pointer;margin-right:6px}
+  .noteBox{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--accent);
+    border-radius:8px;padding:8px;display:none;gap:6px;align-items:center;box-shadow:0 8px 30px #000a}
+  .noteBox input{width:380px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:5px;padding:6px 8px;font:inherit}
+  .toast{position:fixed;right:18px;bottom:18px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;max-width:420px;display:none;box-shadow:0 8px 30px #000a}
+  .toast.ok{border-color:var(--ok)} .toast.err{border-color:var(--rec)}
+  .warnbar{background:#3a2a10;color:#f0c674;padding:8px 18px;font-size:13px;display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <header>
+      <h1>Review Station</h1>
+      <button id="pickBtn" class="primary">Open submissions folder</button>
+      <button id="reconnectBtn" style="display:none"></button>
+      <div class="folderline" id="folderLine">Pick “Fundamentals Fall 2026 — Student Submissions” in your Google Drive.</div>
+      <div class="filters">
+        <button data-f="todo" class="on">To review</button>
+        <button data-f="all">All</button>
+        <button id="rescanBtn" title="Rescan folder">↻</button>
+      </div>
+    </header>
+    <div id="queue"></div>
+  </aside>
+
+  <main>
+    <div class="warnbar" id="warnbar"></div>
+    <div class="top">
+      <div class="title"><b id="tStudent">No video loaded</b><div id="tAssign">&nbsp;</div></div>
+      <span id="recState">● Not recording</span>
+      <button id="recBtn" class="rec" disabled>● Start review</button>
+      <button id="discardBtn" style="display:none">Discard</button>
+    </div>
+
+    <div class="stagewrap" id="stageWrap">
+      <div class="screen" id="screen">
+        <video id="vid" playsinline preload="auto"></video>
+        <canvas id="overlay" width="1280" height="720"></canvas>
+      </div>
+      <canvas id="stage" width="1280" height="720" style="display:none"></canvas>
+      <div class="empty" id="empty">Open the submissions folder, then pick a video from the queue.</div>
+      <div class="noteBox" id="noteBox">
+        <span id="noteAt" style="color:var(--accent);font-variant-numeric:tabular-nums"></span>
+        <input id="noteInput" placeholder="Marker note (optional) — Enter to save, Esc to cancel">
+      </div>
+    </div>
+
+    <div class="transport">
+      <button id="playBtn" disabled>▶</button>
+      <span id="tc">0:00 / 0:00</span>
+      <span id="diag"></span>
+      <input type="range" id="scrub" min="0" max="1000" value="0" disabled>
+      <button id="markBtn" disabled title="Marker (M)">⚑ Marker</button>
+      <button id="camBtn" title="Webcam bubble (C)">Cam: on</button>
+      <span class="meter" title="Mic level"><i id="meter"></i></span>
+      <label class="sm">Video vol in recording <input type="range" id="vidVol" min="0" max="100" value="70"></label>
+    </div>
+
+    <div class="bottom">
+      <section>
+        <h3>Markers this review</h3>
+        <ul id="markers"><li style="color:var(--muted)">Press <kbd>M</kbd> while watching to flag a moment.</li></ul>
+      </section>
+      <section>
+        <h3>Keys</h3>
+        <div class="keys">
+          <div><kbd>Space</kbd> play / pause</div>
+          <div><kbd>←</kbd><kbd>→</kbd> back / fwd 5s</div>
+          <div><kbd>⇧←</kbd><kbd>⇧→</kbd> 1s</div>
+          <div><kbd>,</kbd><kbd>.</kbd> frame step</div>
+          <div><kbd>M</kbd> marker + note</div>
+          <div><kbd>C</kbd> webcam bubble</div>
+          <div><kbd>R</kbd> start / stop review</div>
+          <div>Mouse over frame = pointer</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px">Use headphones so the student’s audio isn’t picked up twice by your mic.</div>
+      </section>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<video id="cam" playsinline muted autoplay style="display:none"></video>
+
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const VIDEO_EXT = /\.(mp4|mov|m4v|webm)$/i;
+const W = 1280, H = 720;
+const params = new URLSearchParams(location.search);
+
+const vid = $('vid'), cam = $('cam'), stage = $('stage'), g = stage.getContext('2d');
+const overlay = $('overlay'), og = overlay.getContext('2d');
+let root = null;            // FileSystemDirectoryHandle
+let canWrite = true;
+let queue = [];             // {assignment, dirHandle, fileHandle, name, base, student, size, done}
+let filter = 'todo';
+let current = null;
+let objectURL = null;
+
+// audio
+let actx = null, recDest = null, vidGainOut = null, vidGainRec = null, micStream = null, analyser = null;
+let camOn = true;
+
+// recording
+let rec = null, recWritable = null, recChunks = null, recChain = Promise.resolve();
+let recStart = 0, recFileName = '', recFileHandle = null, recMime = '';
+let events = [], markers = [];
+let discardArmed = false;
+
+// pointer
+let ptr = {x:0, y:0, t:0};
+let flash = null; // {text, until}
+
+// ---------- helpers ----------
+function fmt(s){ if(!isFinite(s)) s = 0; s = Math.max(0,s); const m = Math.floor(s/60), r = s - m*60;
+  return m + ':' + String(Math.floor(r)).padStart(2,'0'); }
+function fmtPrecise(s){ const m = Math.floor(s/60), r = s - m*60; return m + ':' + r.toFixed(1).padStart(4,'0'); }
+function toast(msg, kind='', ms=5000){ const t = $('toast'); t.textContent = msg; t.className = 'toast ' + kind; t.style.display='block';
+  clearTimeout(toast._t); toast._t = setTimeout(()=> t.style.display='none', ms); }
+function stamp(){ const d = new Date(); const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}${p(d.getMinutes())}`; }
+function parseName(fname){
+  const base = fname.replace(VIDEO_EXT,'');
+  const parts = base.split(' — ');
+  let student = base;
+  if (parts.length >= 2 && parts[0].includes(',')) {
+    const [last, first] = parts[0].split(',').map(s=>s.trim());
+    student = `${first} ${last}`;
+  }
+  return {base, student};
+}
+function warn(msg){ const w = $('warnbar'); w.textContent = msg; w.style.display = msg ? 'block' : 'none'; }
+
+// ---------- IndexedDB persistence of folder handle ----------
+function idb(){ return new Promise((res,rej)=>{ const r = indexedDB.open('review-station',1);
+  r.onupgradeneeded = ()=> r.result.createObjectStore('kv'); r.onsuccess = ()=>res(r.result); r.onerror = ()=>rej(r.error); }); }
+async function kvSet(k,v){ try{ const db = await idb(); db.transaction('kv','readwrite').objectStore('kv').put(v,k); }catch(e){} }
+async function kvGet(k){ try{ const db = await idb(); return await new Promise(res=>{ const q = db.transaction('kv').objectStore('kv').get(k);
+  q.onsuccess=()=>res(q.result); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+
+// ---------- folder ----------
+async function pickFolder(){
+  try{
+    if (params.get('test') === 'opfs') { root = await navigator.storage.getDirectory(); }
+    else if (window.showDirectoryPicker) {
+      root = await window.showDirectoryPicker({id:'submissions', mode:'readwrite'});
+      kvSet('root', root);
+    } else {
+      warn('This browser can’t write to folders. Use Google Chrome.'); return;
+    }
+    canWrite = true;
+    await scan();
+  }catch(e){
+    if (e.name === 'AbortError') return;
+    console.error(e);
+    if (e.name === 'NotAllowedError'){
+      const w = $('warnbar'); w.style.display = 'block';
+      w.innerHTML = 'Chrome refused <b>edit</b> access to that folder. Reset it (see Claude’s note) and try again, or ';
+      const b = document.createElement('button'); b.textContent = 'open it read-only';
+      b.style.marginLeft = '4px';
+      b.onclick = async () => {
+        try{
+          root = await window.showDirectoryPicker({id:'submissions', mode:'read'});
+          canWrite = false;
+          warn('Read-only mode: recordings will save to your Downloads folder — drag them into the assignment’s _feedback folder.');
+          await scan();
+        }catch(err){ if (err.name !== 'AbortError') warn('Still blocked (' + err.name + ': ' + err.message + ').'); }
+      };
+      w.appendChild(b); w.appendChild(document.createTextNode('.'));
+      return;
+    }
+    warn('Chrome wouldn’t open that folder (' + e.name + ': ' + e.message + ').');
+  }
+}
+async function tryReconnect(){
+  const h = await kvGet('root');
+  if (!h) return;
+  const b = $('reconnectBtn');
+  b.textContent = 'Reconnect “' + h.name + '”';
+  b.style.display = 'inline-block'; b.style.marginTop = '6px';
+  b.onclick = async ()=>{
+    try{ const p = await h.requestPermission({mode:'readwrite'});
+      if (p === 'granted'){ root = h; b.style.display='none'; await scan(); } }catch(e){ console.error(e); }
+  };
+}
+
+async function listVideos(dir, assignment){
+  const out = []; let fbNames = [];
+  try{ const fb = await dir.getDirectoryHandle('_feedback'); for await (const [n] of fb.entries()) fbNames.push(n); }catch(e){}
+  for await (const [name, h] of dir.entries()){
+    if (h.kind !== 'file' || !VIDEO_EXT.test(name) || name.startsWith('.')) continue;
+    const {base, student} = parseName(name);
+    let size = 0; try{ size = (await h.getFile()).size; }catch(e){}
+    const done = fbNames.some(n => n.startsWith(base + ' — feedback'));
+    out.push({assignment, dirHandle:dir, fileHandle:h, name, base, student, size, done});
+  }
+  return out;
+}
+
+async function scan(){
+  if (!root) return;
+  $('folderLine').textContent = 'Folder: ' + root.name + ' — scanning…';
+  const items = [], seen = [], errors = [];
+  try{ items.push(...await listVideos(root, root.name)); }catch(e){ errors.push(root.name + ': ' + e.name); }
+  const dirs = [];
+  try{
+    for await (const [name, h] of root.entries()){
+      seen.push((h.kind === 'directory' ? '📁 ' : '') + name);
+      if (h.kind === 'directory' && !name.startsWith('_') && !name.startsWith('.')) dirs.push([name,h]);
+    }
+  }catch(e){ errors.push('listing ' + root.name + ': ' + e.name + ' ' + e.message); }
+  dirs.sort((a,b)=> a[0].localeCompare(b[0], undefined, {numeric:true}));
+  for (const [name,h] of dirs){
+    try{ items.push(...await listVideos(h, name)); }catch(e){ errors.push(name + ': ' + e.name); }
+  }
+  items.sort((a,b)=> a.assignment.localeCompare(b.assignment,undefined,{numeric:true}) || a.student.localeCompare(b.student));
+  queue = items;
+  $('folderLine').textContent = `Folder: ${root.name} — ${dirs.length} assignment folders, ${items.length} videos`;
+  renderQueue();
+  if (!items.length){
+    const q = $('queue'); q.innerHTML = '';
+    const add = (t, cls='group') => { const d = document.createElement('div'); d.className = cls; d.textContent = t; d.style.textTransform='none'; q.appendChild(d); };
+    add('No videos found. Chrome sees ' + seen.length + ' item(s) in this folder:');
+    seen.slice(0, 25).forEach(n => add(n));
+    errors.forEach(e => add('Error — ' + e));
+    add('Try “Open submissions folder” again and re-pick the folder (don’t use Reconnect).');
+  } else if (errors.length) toast('Some folders couldn’t be read: ' + errors.join('; '), 'err', 12000);
+}
+
+function renderQueue(){
+  const q = $('queue'); q.innerHTML = '';
+  let lastA = null;
+  const shown = queue.filter(x => filter === 'all' || !x.done || x === current);
+  if (!shown.length && queue.length){ q.innerHTML = '<div class="group">Everything here has feedback.</div>'; return; }
+  for (const it of shown){
+    if (it.assignment !== lastA){
+      const n = queue.filter(x=>x.assignment===it.assignment);
+      const d = n.filter(x=>x.done).length;
+      const gEl = document.createElement('div'); gEl.className='group';
+      gEl.textContent = `${it.assignment} · ${d}/${n.length} done`; q.appendChild(gEl); lastA = it.assignment;
+    }
+    const el = document.createElement('div');
+    el.className = 'item' + (it.done?' done':'') + (it===current?' active':'');
+    el.innerHTML = '<span class="dot"></span><span class="nm"></span><span class="sz"></span>';
+    el.querySelector('.nm').textContent = it.student;
+    el.querySelector('.sz').textContent = it.size ? Math.round(it.size/1e6)+' MB' : '';
+    el.onclick = ()=> loadItem(it);
+    q.appendChild(el);
+  }
+}
+
+// ---------- load a video ----------
+async function ensureAudio(){
+  if (actx) { if (actx.state==='suspended') await actx.resume(); return; }
+  actx = new AudioContext();
+  recDest = actx.createMediaStreamDestination();
+  const src = actx.createMediaElementSource(vid);
+  vidGainOut = actx.createGain(); vidGainRec = actx.createGain();
+  vidGainRec.gain.value = $('vidVol').value/100;
+  src.connect(vidGainOut).connect(actx.destination);
+  src.connect(vidGainRec).connect(recDest);
+}
+
+let loadToken = 0;
+async function loadItem(it){
+  if (rec){ toast('Stop or discard the current review first.','err'); return; }
+  await ensureAudio();
+  current = it; const my = ++loadToken;
+  vid.pause();
+  ['playBtn','scrub','markBtn','recBtn'].forEach(id=> $(id).disabled=true);
+  $('tStudent').textContent = it.student;
+  $('tAssign').textContent = it.assignment + (it.done ? ' · already has feedback (a new review is saved alongside)' : '');
+  markers = []; renderMarkers();
+  renderQueue();
+  let file;
+  try{ file = await it.fileHandle.getFile(); }
+  catch(e){ toast('Couldn’t read this file: ' + e.message, 'err', 9000); return; }
+  if (my !== loadToken) return;
+  $('empty').style.display = 'none';
+  if (objectURL) URL.revokeObjectURL(objectURL);
+  objectURL = URL.createObjectURL(file);       // plays straight from disk / Drive, no preload
+  vid.onerror = ()=> { toast('Chrome can’t play this file (codec?). ' + it.name, 'err', 9000); };
+  vid.onloadedmetadata = ()=>{
+    ['playBtn','scrub','markBtn','recBtn'].forEach(id=> $(id).disabled=false);
+    updateTC();
+  };
+  vid.src = objectURL;
+}
+
+function fitScreen(){
+  const wrap = $('stageWrap'); const aw = wrap.clientWidth - 28, ah = wrap.clientHeight - 28;
+  let w = aw, h = w * 9/16; if (h > ah){ h = ah; w = h * 16/9; }
+  const sc = $('screen'); sc.style.width = Math.max(0,w) + 'px'; sc.style.height = Math.max(0,h) + 'px';
+}
+new ResizeObserver(fitScreen).observe($('stageWrap'));
+
+// ---------- drawing ----------
+function drawContain(c, src, sw, sh, x, y, w, h){
+  if (!sw || !sh) return;
+  const s = Math.min(w/sw, h/sh), dw = sw*s, dh = sh*s;
+  c.drawImage(src, x+(w-dw)/2, y+(h-dh)/2, dw, dh);
+}
+function drawScene(c, withVideo){
+  if (withVideo){
+    c.fillStyle = '#000'; c.fillRect(0,0,W,H);
+    if (current && vid.readyState >= 2) drawContain(c, vid, vid.videoWidth, vid.videoHeight, 0,0,W,H);
+  } else c.clearRect(0,0,W,H);
+
+  // webcam bubble
+  if (camOn && micStream && cam.readyState >= 2){
+    const d = 200, cx = W - d/2 - 28, cy = H - d/2 - 28;
+    c.save(); c.beginPath(); c.arc(cx,cy,d/2,0,Math.PI*2); c.closePath(); c.clip();
+    const vw = cam.videoWidth, vh = cam.videoHeight, s = Math.max(d/vw, d/vh);
+    c.translate(cx,cy); c.scale(-1,1); // mirror
+    c.drawImage(cam, -vw*s/2, -vh*s/2, vw*s, vh*s);
+    c.restore();
+    c.beginPath(); c.arc(cx,cy,d/2,0,Math.PI*2); c.lineWidth=4; c.strokeStyle='rgba(255,255,255,.85)'; c.stroke();
+  }
+
+  if (current){
+    // timecode pill
+    const txt = fmt(vid.currentTime) + ' / ' + fmt(vid.duration) + (vid.paused ? '   ❚❚ paused' : '');
+    c.font = '600 24px -apple-system, Helvetica, Arial, sans-serif';
+    const tw = c.measureText(txt).width;
+    c.fillStyle = 'rgba(0,0,0,.6)'; roundRect(c, 24, H-64, tw+28, 40, 8); c.fill();
+    c.fillStyle = '#fff'; c.fillText(txt, 38, H-35);
+  }
+  // marker flash
+  if (flash && performance.now() < flash.until){
+    c.font = '600 26px -apple-system, Helvetica, Arial, sans-serif';
+    const tw = c.measureText(flash.text).width;
+    c.fillStyle = 'rgba(79,156,249,.92)'; roundRect(c, 24, 24, tw+28, 44, 8); c.fill();
+    c.fillStyle = '#fff'; c.fillText(flash.text, 38, 55);
+  }
+  // pointer
+  if (performance.now() - ptr.t < 1500){
+    const grd = c.createRadialGradient(ptr.x,ptr.y,0,ptr.x,ptr.y,22);
+    grd.addColorStop(0,'rgba(255,40,40,.95)'); grd.addColorStop(.35,'rgba(255,40,40,.7)'); grd.addColorStop(1,'rgba(255,40,40,0)');
+    c.fillStyle = grd; c.beginPath(); c.arc(ptr.x,ptr.y,22,0,Math.PI*2); c.fill();
+  }
+}
+function frame(){
+  if (session){ drawScene(g, true); session.addFrame(); }   // full composite only while recording
+  drawScene(og, false);                                     // on-screen: overlays above the native video
+  updateTC();
+}
+function roundRect(c, x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+// Use a timer, not rAF, so the recording keeps getting frames even if the window loses focus.
+setInterval(frame, 1000/30);
+
+overlay.addEventListener('mousemove', e=>{
+  const r = overlay.getBoundingClientRect();
+  ptr = {x:(e.clientX-r.left)*W/r.width, y:(e.clientY-r.top)*H/r.height, t:performance.now()};
+});
+overlay.addEventListener('mouseleave', ()=> ptr.t = 0);
+overlay.addEventListener('click', ()=> togglePlay());
+
+function updateTC(){
+  $('tc').textContent = fmt(vid.currentTime) + ' / ' + fmt(vid.duration);
+  if (!scrubbing && vid.duration) $('scrub').value = Math.round(vid.currentTime / vid.duration * 1000);
+  $('playBtn').textContent = vid.paused ? '▶' : '❚❚';
+  if (vid.videoWidth){
+    const q = vid.getVideoPlaybackQuality ? vid.getVideoPlaybackQuality() : null;
+    $('diag').textContent = `${vid.videoWidth}×${vid.videoHeight}` + (q && q.droppedVideoFrames ? ` · ${q.droppedVideoFrames} dropped` : '');
+  }
+}
+let scrubbing = false;
+$('scrub').addEventListener('input', e=>{ scrubbing = true; if (vid.duration) vid.currentTime = e.target.value/1000*vid.duration; });
+$('scrub').addEventListener('change', ()=> scrubbing = false);
+
+// ---------- transport ----------
+function togglePlay(){ if (!current) return; vid.paused ? vid.play() : vid.pause(); }
+function seek(d){ if (!current) return; vid.currentTime = Math.min(Math.max(0, vid.currentTime + d), vid.duration||0); }
+function step(dir){ if (!current) return; vid.pause(); seek(dir/30); }
+
+function logEvent(type, extra){
+  if (!rec || rec === 'starting') return;
+  events.push(Object.assign({type, rec: +((performance.now()-recStart)/1000).toFixed(2), video: +vid.currentTime.toFixed(2)}, extra||{}));
+}
+vid.addEventListener('play', ()=> logEvent('play'));
+vid.addEventListener('pause', ()=> logEvent('pause'));
+vid.addEventListener('seeked', ()=> logEvent('seek'));
+vid.addEventListener('ended', ()=> logEvent('ended'));
+
+// ---------- markers ----------
+let pendingMarker = null;
+function startMarker(){
+  if (!current) return;
+  pendingMarker = { video: +vid.currentTime.toFixed(2), rec: rec ? +((performance.now()-recStart)/1000).toFixed(2) : null };
+  flash = {text:'⚑ ' + fmt(pendingMarker.video), until: performance.now()+1800};
+  $('noteAt').textContent = '⚑ ' + fmt(pendingMarker.video);
+  $('noteBox').style.display = 'flex'; $('noteInput').value=''; $('noteInput').focus();
+}
+function commitMarker(save){
+  $('noteBox').style.display = 'none';
+  if (save && pendingMarker){
+    pendingMarker.note = $('noteInput').value.trim();
+    markers.push(pendingMarker);
+    if (rec) events.push({type:'marker', rec: pendingMarker.rec, video: pendingMarker.video, note: pendingMarker.note});
+    renderMarkers();
+  }
+  pendingMarker = null; $('noteInput').blur();
+}
+$('noteInput').addEventListener('keydown', e=>{
+  if (e.key === 'Enter'){ e.preventDefault(); commitMarker(true); }
+  else if (e.key === 'Escape'){ e.preventDefault(); commitMarker(false); }
+  e.stopPropagation();
+});
+function renderMarkers(){
+  const ul = $('markers'); ul.innerHTML='';
+  if (!markers.length){ ul.innerHTML = '<li style="color:var(--muted)">Press <kbd>M</kbd> while watching to flag a moment.</li>'; return; }
+  markers.forEach(m=>{
+    const li = document.createElement('li');
+    const t = document.createElement('span'); t.className='t'; t.textContent = fmt(m.video);
+    t.onclick = ()=> { vid.currentTime = m.video; };
+    li.appendChild(t); li.appendChild(document.createTextNode(m.note || '(no note)'));
+    ul.appendChild(li);
+  });
+}
+
+// ---------- mic / cam ----------
+async function ensureMedia(){
+  if (micStream) return true;
+  try{
+    micStream = await navigator.mediaDevices.getUserMedia({
+      video: {width:{ideal:640}, height:{ideal:480}, frameRate:{ideal:30}},
+      audio: {echoCancellation:true, noiseSuppression:true, autoGainControl:true}
+    });
+  }catch(e){
+    toast('Camera/mic blocked: ' + e.name + '. Allow them in Chrome’s address bar and try again.', 'err', 9000);
+    return false;
+  }
+  cam.srcObject = micStream; cam.play().catch(()=>{});
+  const micSrc = actx.createMediaStreamSource(new MediaStream(micStream.getAudioTracks()));
+  micSrc.connect(recDest);
+  analyser = actx.createAnalyser(); analyser.fftSize = 512; micSrc.connect(analyser);
+  const buf = new Uint8Array(analyser.fftSize);
+  setInterval(()=>{ analyser.getByteTimeDomainData(buf); let peak=0; for (const v of buf) peak = Math.max(peak, Math.abs(v-128));
+    $('meter').style.width = Math.min(100, peak/128*180) + '%'; }, 80);
+  return true;
+}
+
+// ---------- recording backends ----------
+// Primary: WebCodecs (H.264 + AAC) muxed into a standard MP4 with mp4-muxer, streamed to disk.
+// Chrome's own MediaRecorder MP4 output is fragmented and won't open in QuickTime or Drive.
+// Fallback: MediaRecorder WebM (plays in Drive and Chrome, not QuickTime).
+const VCODECS = [['avc1.640028','avc'],['avc1.4D0028','avc'],['avc1.42E028','avc'],['avc1.42E01F','avc']];
+if (params.get('test')) VCODECS.push(['vp09.00.31.08','vp9']);   // test rigs without H.264 only
+
+async function planWebCodecs(){
+  if (!(window.VideoEncoder && window.AudioEncoder && window.AudioData && window.MediaStreamTrackProcessor && window.Mp4Muxer)) return null;
+  let vcfg = null, vmux = null;
+  for (const [codec, mux] of VCODECS){
+    const cfg = {codec, width:W, height:H, bitrate:4_000_000, framerate:30};
+    if (mux === 'avc') cfg.avc = {format:'avc'};
+    try{ if ((await VideoEncoder.isConfigSupported(cfg)).supported){ vcfg = cfg; vmux = mux; break; } }catch(e){}
+  }
+  if (!vcfg) return null;
+  const track = recDest.stream.getAudioTracks()[0].clone();
+  const reader = new MediaStreamTrackProcessor({track}).readable.getReader();
+  const first = (await reader.read()).value;          // learn the real sample rate / channel count
+  const sr = first.sampleRate, ch = first.numberOfChannels;
+  let acfg = null, amux = null;
+  for (const [codec, mux] of [['mp4a.40.2','aac'],['opus','opus']]){
+    const cfg = {codec, sampleRate:sr, numberOfChannels:ch, bitrate:160000};
+    try{ if ((await AudioEncoder.isConfigSupported(cfg)).supported){ acfg = cfg; amux = mux; break; } }catch(e){}
+  }
+  if (!acfg){ first.close(); try{ reader.cancel(); }catch(e){} track.stop(); return null; }
+  return {vcfg, vmux, acfg, amux, track, reader, first};
+}
+
+function startWebCodecs(plan, target){
+  const muxer = new Mp4Muxer.Muxer({
+    target,
+    video: {codec: plan.vmux, width: W, height: H},
+    audio: {codec: plan.amux, sampleRate: plan.acfg.sampleRate, numberOfChannels: plan.acfg.numberOfChannels},
+    fastStart: false,
+    firstTimestampBehavior: 'offset'
+  });
+  let err = null, stopped = false, lastKey = -1e12, lastTs = -1e12, samples = 0;
+  const ve = new VideoEncoder({output: (c, m) => muxer.addVideoChunk(c, m), error: e => { err = e; console.error(e); }});
+  ve.configure(plan.vcfg);
+  const ae = new AudioEncoder({output: (c, m) => muxer.addAudioChunk(c, m), error: e => { err = e; console.error(e); }});
+  ae.configure(plan.acfg);
+  const base = performance.now();
+
+  function encodeAudio(value){
+    const frames = value.numberOfFrames, chs = value.numberOfChannels, fmt = value.format;
+    if (chs === plan.acfg.numberOfChannels && value.sampleRate === plan.acfg.sampleRate && ae.state === 'configured'){
+      const planar = fmt.endsWith('-planar');
+      const size = value.allocationSize({planeIndex:0});
+      const buf = new ArrayBuffer(planar ? size*chs : size);
+      if (planar) for (let i = 0; i < chs; i++) value.copyTo(new Uint8Array(buf, i*size, size), {planeIndex:i});
+      else value.copyTo(new Uint8Array(buf), {planeIndex:0});
+      // restamp from a sample counter so audio stays continuous and locked to the video clock
+      const ad = new AudioData({format: fmt, sampleRate: value.sampleRate, numberOfFrames: frames, numberOfChannels: chs,
+                                timestamp: Math.round(samples / value.sampleRate * 1e6), data: buf});
+      ae.encode(ad); ad.close();
+    }
+    samples += frames;
+    value.close();
+  }
+  encodeAudio(plan.first);
+  const pump = (async () => {
+    while (true){
+      const {value, done} = await plan.reader.read();
+      if (done) break;
+      if (stopped){ value.close(); break; }
+      encodeAudio(value);
+    }
+  })().catch(e => console.warn('audio pump', e));
+
+  return {
+    base,
+    format: `video/mp4 (${plan.vcfg.codec}, ${plan.acfg.codec})`,
+    addFrame(){
+      if (stopped || ve.state !== 'configured' || ve.encodeQueueSize > 8) return;
+      // snap to a 30 fps grid so timestamps are clean and strictly increasing despite timer jitter
+      const idx = Math.round((performance.now() - base) / (1000/30));
+      if (idx <= lastTs) return;
+      lastTs = idx;
+      const ts = Math.round(idx * 1e6 / 30);
+      const vf = new VideoFrame(stage, {timestamp: ts});
+      const key = ts - lastKey >= 2e6; if (key) lastKey = ts;
+      ve.encode(vf, {keyFrame: key}); vf.close();
+    },
+    async finish(){
+      stopped = true;
+      try{ await plan.reader.cancel(); }catch(e){}
+      plan.track.stop();
+      await pump;
+      if (ve.state === 'configured') await ve.flush();
+      if (ae.state === 'configured') await ae.flush();
+      muxer.finalize();
+      try{ ve.close(); ae.close(); }catch(e){}
+      if (err) throw err;
+    },
+    async abort(){
+      stopped = true;
+      try{ await plan.reader.cancel(); }catch(e){}
+      plan.track.stop();
+      try{ ve.close(); ae.close(); }catch(e){}
+    }
+  };
+}
+
+function startMediaRecorderWebm(onChunk){
+  const mime = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']
+    .find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+  const stream = new MediaStream([ ...stage.captureStream(30).getVideoTracks(), ...recDest.stream.getAudioTracks() ]);
+  const mr = new MediaRecorder(stream, {mimeType: mime || undefined, videoBitsPerSecond: 4_000_000, audioBitsPerSecond: 160_000});
+  mr.ondataavailable = e => { if (e.data && e.data.size) onChunk(e.data); };
+  const base = performance.now();
+  mr.start(1000);
+  const stop = () => new Promise(res => { mr.onstop = res; mr.stop(); });
+  return { base, format: mime || 'video/webm', addFrame(){}, finish: stop, abort: stop };
+}
+
+// ---------- recording ----------
+let session = null;      // active encoder session
+let recTarget = null;    // ArrayBufferTarget when we can't write to the folder
+async function startReview(){
+  if (!current || rec) return;
+  rec = 'starting';                       // block double-starts
+  try{
+    await ensureAudio();
+    if (!(await ensureMedia())){ rec = null; return; }
+    const plan = await planWebCodecs();
+    const ext = plan ? 'mp4' : 'webm';
+    recFileName = `${current.base} — feedback ${stamp()}.${ext}`;
+    recChain = Promise.resolve(); recChunks = null; recWritable = null; recFileHandle = null; recTarget = null;
+    try{
+      if (!canWrite) throw new Error('read-only');
+      const fb = await current.dirHandle.getDirectoryHandle('_feedback', {create:true});
+      recFileHandle = await fb.getFileHandle(recFileName, {create:true});
+      recWritable = await recFileHandle.createWritable();
+    }catch(e){
+      console.warn('Write to folder failed, falling back to download', e);
+      canWrite = false;
+      warn('Can’t write into the Drive folder — this review will download to your Downloads folder instead.');
+    }
+    if (plan){
+      recTarget = recWritable ? new Mp4Muxer.FileSystemWritableFileStreamTarget(recWritable) : new Mp4Muxer.ArrayBufferTarget();
+      session = startWebCodecs(plan, recTarget);
+    } else {
+      recChunks = [];
+      session = startMediaRecorderWebm(chunk => {
+        if (recWritable) recChain = recChain.then(() => recWritable.write(chunk));
+        else recChunks.push(chunk);
+      });
+    }
+    recMime = session.format;
+    rec = session;
+    events = []; markers = []; renderMarkers();
+    recStart = session.base;
+    logEvent('start');
+    setRecUI(true);
+    recTimer = setInterval(()=> { $('recState').textContent = '● REC ' + fmt((performance.now()-recStart)/1000); }, 250);
+  }catch(e){
+    console.error(e); rec = null; session = null;
+    toast('Couldn’t start recording: ' + e.message, 'err', 12000);
+  }
+}
+let recTimer = null;
+
+function setRecUI(on){
+  $('recState').className = on ? 'on' : '';
+  $('recState').textContent = on ? '● REC 0:00' : '● Not recording';
+  $('recBtn').textContent = on ? '■ Stop & save' : '● Start review';
+  $('recBtn').className = on ? 'primary' : 'rec';
+  $('discardBtn').style.display = on ? 'inline-block' : 'none';
+  $('discardBtn').textContent = 'Discard'; discardArmed = false;
+}
+
+let stopping = false;
+async function stopReview(save=true){
+  if (!rec || rec === 'starting' || stopping) return;
+  stopping = true;
+  logEvent('stop');
+  vid.pause();
+  clearInterval(recTimer);
+  $('recState').textContent = save ? 'Saving…' : 'Discarding…';
+  const durationSec = +((performance.now()-recStart)/1000).toFixed(1);
+  const it = current, s = session;
+  session = null;                         // stop feeding frames
+  try{
+    if (!save){
+      await s.abort();
+      if (recWritable){ try{ await recWritable.abort(); }catch(e){}
+        try{ const fb = await it.dirHandle.getDirectoryHandle('_feedback'); await fb.removeEntry(recFileName); }catch(e){} }
+      toast('Review discarded.');
+    } else {
+      await s.finish();
+      await recChain;
+      const meta = {
+        version: 1,
+        course: 'JOUR 71107 Fundamentals of Visual Reporting — Fall 2026',
+        student: it.student,
+        assignment: it.assignment,
+        submissionFile: it.name,
+        recordingFile: recFileName,
+        recordedAt: new Date().toISOString(),
+        mimeType: recMime,
+        recordingDurationSec: durationSec,
+        submissionDurationSec: +(vid.duration||0).toFixed(2),
+        markers, events,
+        status: 'recorded'   // later steps: summarized → drafted → sent
+      };
+      const json = JSON.stringify(meta, null, 2);
+      const jsonName = recFileName.replace(/\.(mp4|webm)$/, '.json');
+      if (recWritable){
+        await recWritable.close();
+        const fb = await it.dirHandle.getDirectoryHandle('_feedback', {create:true});
+        const jh = await fb.getFileHandle(jsonName, {create:true});
+        const jw = await jh.createWritable(); await jw.write(json); await jw.close();
+        toast('Saved to ' + it.assignment + ' / _feedback — Drive will upload it.', 'ok', 7000);
+      } else {
+        const blob = recTarget ? new Blob([recTarget.buffer], {type:'video/mp4'}) : new Blob(recChunks, {type:'video/webm'});
+        download(blob, recFileName);
+        download(new Blob([json], {type:'application/json'}), jsonName);
+        toast('Downloaded ' + recFileName, 'ok', 7000);
+      }
+      it.done = true;
+    }
+  }catch(e){
+    console.error(e); toast('Saving failed: ' + e.message, 'err', 12000);
+  }
+  rec = null; recWritable = null; recChunks = null; recTarget = null; stopping = false;
+  setRecUI(false);
+  renderQueue();
+  if (save){
+    const next = queue.find(x => !x.done);
+    if (next) $('tAssign').textContent = it.assignment + ' · saved. Next up: ' + next.student + ' (pick from the queue)';
+  }
+}
+function download(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 60000); }
+
+// ---------- wiring ----------
+$('pickBtn').onclick = pickFolder;
+$('rescanBtn').onclick = ()=> scan();
+document.querySelectorAll('.filters [data-f]').forEach(b => b.onclick = ()=>{
+  filter = b.dataset.f; document.querySelectorAll('.filters [data-f]').forEach(x=>x.classList.toggle('on', x===b)); renderQueue(); });
+$('playBtn').onclick = togglePlay;
+$('markBtn').onclick = startMarker;
+$('recBtn').onclick = ()=> rec ? stopReview(true) : startReview();
+$('discardBtn').onclick = ()=>{
+  if (!discardArmed){ discardArmed = true; $('discardBtn').textContent = 'Click again to discard'; setTimeout(()=>{ if(rec){discardArmed=false; $('discardBtn').textContent='Discard';} }, 3000); return; }
+  stopReview(false);
+};
+$('camBtn').onclick = toggleCam;
+function toggleCam(){ camOn = !camOn; $('camBtn').textContent = 'Cam: ' + (camOn?'on':'off'); logEvent(camOn?'cam-on':'cam-off'); }
+$('vidVol').oninput = e => { if (vidGainRec) vidGainRec.gain.value = e.target.value/100; };
+
+document.addEventListener('keydown', e=>{
+  if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  switch(e.key){
+    case ' ': e.preventDefault(); togglePlay(); break;
+    case 'ArrowLeft': e.preventDefault(); seek(e.shiftKey?-1:-5); break;
+    case 'ArrowRight': e.preventDefault(); seek(e.shiftKey?1:5); break;
+    case ',': step(-1); break;
+    case '.': step(1); break;
+    case 'm': case 'M': e.preventDefault(); startMarker(); break;
+    case 'c': case 'C': toggleCam(); break;
+    case 'r': case 'R': if (current) (rec ? stopReview(true) : startReview()); break;
+  }
+});
+// keep keyboard shortcuts from re-triggering whichever button was last clicked
+document.addEventListener('click', e=>{ const b = e.target.closest('button'); if (b) b.blur(); });
+window.addEventListener('beforeunload', e=>{ if (rec){ e.preventDefault(); e.returnValue=''; } });
+
+if (!window.showDirectoryPicker && params.get('test') !== 'opfs') warn('Open this page in Google Chrome — Safari can’t save into folders.');
+tryReconnect();
+
+// test hook
+window.__rs = { pickFolder, scan, loadItem: i=>loadItem(queue[i]), startReview, stopReview, startMarker, commitMarker, get queue(){return queue;} };
+})();
+</script>
+</body>
+</html>
