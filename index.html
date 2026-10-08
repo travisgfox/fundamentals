@@ -282,6 +282,87 @@
   }
   .botsugg button:hover{border-color:var(--signal);color:var(--signal);}
 
+
+  /* ---------- QUICK GUIDES ---------- */
+  .guides{margin:1.75rem 0 2rem;}
+  .guides .ghead{
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--slate);margin:0 0 .6rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+  }
+  .gcards{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;}
+  .gcard{
+    appearance:none;-webkit-appearance:none;text-align:left;cursor:pointer;
+    font:inherit;color:var(--ink);background:#fff;
+    border:1.5px solid var(--ink);border-radius:0;padding:1rem 1rem .9rem;
+    display:flex;flex-direction:column;gap:.35rem;min-height:9.5rem;
+    transition:background .15s ease,color .15s ease;
+  }
+  .gcard:hover{background:var(--signal-soft);}
+  .gcard:focus-visible{outline:2px solid var(--signal);outline-offset:3px;}
+  .gcard .gn{font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.08em;color:var(--signal);}
+  .gcard .gt{font-family:var(--display);font-weight:600;font-size:1.12rem;line-height:1.2;}
+  .gcard .gs{font-size:.88rem;line-height:1.45;color:var(--slate);flex:1;}
+  .gcard .go{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);}
+  .gcard .go::after{content:" +";}
+  .gcard[aria-expanded="true"]{background:var(--ink);color:var(--paper);}
+  .gcard[aria-expanded="true"] .gn{color:#7fd6cd;}
+  .gcard[aria-expanded="true"] .gs{color:#c9c8c2;}
+  .gcard[aria-expanded="true"] .go{color:var(--paper);}
+  .gcard[aria-expanded="true"] .go::after{content:" \2013";}
+
+  .gpanel{
+    border:1.5px solid var(--ink);border-top:4px solid var(--signal);background:#fff;
+    margin-top:.75rem;padding:1.25rem clamp(1rem,3vw,1.75rem) 1.4rem;
+    font-size:.96rem;line-height:1.55;scroll-margin-top:1rem;
+  }
+  .gpanel[hidden]{display:none;}
+  .gpanel .gtop{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:.4rem;}
+  .gpanel h3{font-family:var(--display);font-weight:600;font-size:1.35rem;line-height:1.2;margin:0;}
+  .gpanel .gclose{
+    font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+    background:none;border:1px solid var(--rule);color:var(--slate);padding:.35rem .6rem;cursor:pointer;white-space:nowrap;
+  }
+  .gpanel .gclose:hover{border-color:var(--ink);color:var(--ink);}
+  .gpanel .lead{font-size:1rem;margin:0 0 1.1rem;padding:.75rem .9rem;background:var(--signal-soft);border-left:3px solid var(--signal);}
+  .gpanel h4{
+    font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--signal);margin:1.4rem 0 .55rem;padding-top:.9rem;border-top:1px solid var(--rule);
+  }
+  .gpanel p{margin:0 0 .7rem;}
+  .gpanel ul,.gpanel ol{margin:0 0 .8rem;padding-left:1.3rem;}
+  .gpanel li{margin-bottom:.4rem;}
+  .gpanel li::marker{color:var(--signal);font-family:var(--mono);font-size:.85em;}
+  .gpanel code{font-family:var(--mono);font-size:.84em;background:var(--paper);padding:.05rem .3rem;}
+  .gpanel .mp{
+    font-family:var(--mono);font-size:.74em;letter-spacing:.02em;white-space:nowrap;display:inline-flex;align-items:center;
+    border:1px solid var(--rule);background:#fff;padding:.1rem .4rem;
+  }
+  .gpanel .mi{display:inline-block;height:1.5em;width:auto;margin-right:.35em;}
+  .gpanel .tree{font-family:var(--mono);font-size:.84rem;line-height:1.7;background:var(--paper);padding:.75rem 1rem;margin:0 0 .8rem;white-space:pre;overflow-x:auto;}
+  .gpanel .gtable{width:100%;border-collapse:collapse;margin:0 0 .8rem;font-size:.9rem;}
+  .gpanel .gtable th{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);font-weight:400;text-align:left;padding:.4rem .5rem;border-bottom:1.5px solid var(--ink);}
+  .gpanel .gtable td{padding:.5rem .5rem;border-bottom:1px solid var(--rule);vertical-align:top;}
+  .gpanel .gtable td:first-child{white-space:nowrap;}
+  .gpanel ul.check{list-style:none;padding-left:0;}
+  .gpanel ul.check li{position:relative;padding-left:1.6rem;}
+  .gpanel ul.check li::before{content:"";position:absolute;left:0;top:.28em;width:.85rem;height:.85rem;border:1.5px solid var(--signal);}
+  .gpanel .warn{font-size:.9rem;color:#8a3b12;}
+  .gpanel .gfoot{font-size:.88rem;color:var(--slate);margin:1.2rem 0 0;padding-top:.8rem;border-top:1px solid var(--rule);}
+
+  @media (max-width:640px){
+    .gcards{grid-template-columns:1fr;gap:.5rem;}
+    .gcard{min-height:0;padding:.85rem .95rem;flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:.6rem;}
+    .gcard .gs{flex-basis:100%;order:3;}
+    .gcard .go{order:4;flex-basis:100%;}
+    .gpanel{margin-top:0;margin-bottom:.25rem;}
+    .gpanel .gtable:not(.keep) thead{display:none;}
+    .gpanel .gtable:not(.keep) tr{display:block;padding:.5rem 0;border-bottom:1px solid var(--rule);}
+    .gpanel .gtable:not(.keep) td{display:block;border:0;padding:.1rem 0;}
+    .gpanel .gtable td:first-child{white-space:normal;}
+    .gpanel .gtable:not(.keep) td:nth-child(2){font-weight:500;}
+    .gpanel .gtable:not(.keep) td[data-k]::before{content:attr(data-k) " ";font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);}
+  }
+
   /* ---------- ASSIGNMENTS ---------- */
   .proj{
     display:grid;
@@ -723,6 +804,232 @@
     <h2><span class="num">11</span>Additional technical support</h2>
     <p>In addition to me, reach out to our in-house video coaches. They're well versed in everything from camera setup to the technical side of Premiere — they're here to help you, so take advantage of it.</p>
     <p>This semester's video coaches are Andre Ward (<a href="mailto:andre.ward@journalism.cuny.edu">andre.ward@journalism.cuny.edu</a>) and Andrew Shepard (<a href="mailto:andrew.shepard@journalism.cuny.edu">andrew.shepard@journalism.cuny.edu</a>).</p>
+
+    <div class="guides" id="guides">
+      <div class="ghead"><span>Quick guides</span><span>Camera &rarr; Project &rarr; Export</span></div>
+      <div class="gcards" role="group" aria-label="Quick guides">
+        <button type="button" class="gcard" id="gc-camera" aria-expanded="false" aria-controls="g-camera">
+          <span class="gn">01</span><span class="gt">C200 camera settings</span>
+          <span class="gs">1080, 30p, MP4. Focus aids and audio inputs.</span>
+          <span class="go">Open guide</span>
+        </button>
+        <button type="button" class="gcard" id="gc-project" aria-expanded="false" aria-controls="g-project">
+          <span class="gn">02</span><span class="gt">Setting up a Premiere project</span>
+          <span class="gs">Folders, scratch disks, audio channels, first sequence.</span>
+          <span class="go">Open guide</span>
+        </button>
+        <button type="button" class="gcard" id="gc-export" aria-expanded="false" aria-controls="g-export">
+          <span class="gn">03</span><span class="gt">Exporting from Premiere</span>
+          <span class="gs">The right preset, and two checks before you upload.</span>
+          <span class="go">Open guide</span>
+        </button>
+      </div>
+
+      <!-- 01 CAMERA -->
+      <div class="gpanel" id="g-camera" role="region" aria-labelledby="gh-camera" hidden>
+        <div class="gtop"><h3 id="gh-camera">C200 camera settings</h3><button type="button" class="gclose">Close &times;</button></div>
+        <p class="lead"><strong>Shoot MP4 to the SD card, 1920&nbsp;&times;&nbsp;1080, 29.97P (&ldquo;30p&rdquo;).</strong></p>
+        <p>Press <strong>MENU</strong>. Each menu has an icon and numbered pages. With the joystick, pick the menu, then the <strong>page number</strong>, then the item, and press the joystick to select. <strong>CANCEL</strong> goes back a level.</p>
+
+        <h4>1 &middot; Recording format</h4>
+        <table class="gtable">
+          <thead><tr><th>Menu</th><th>Setting</th><th>Set to</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td data-k="Menu"><span class="mp"><img class="mi" data-i="rec" alt="">Recording/Media Setup &middot; p1</span></td><td>System Frequency</td><td><strong>59.94 Hz</strong></td><td>US standard. Changing it restarts the camera.</td></tr>
+            <tr><td data-k="Menu"><span class="mp"><img class="mi" data-i="rec" alt="">Recording/Media Setup &middot; p1</span></td><td>Main Rec Format</td><td><strong>MP4 (SD Card)</strong></td><td>Not RAW &mdash; RAW needs CFast cards and heavy post.</td></tr>
+            <tr><td data-k="Menu"><span class="mp"><img class="mi" data-i="rec" alt="">Recording/Media Setup &middot; p2</span></td><td>Frame Rate</td><td><strong>29.97P</strong></td><td>This is &ldquo;30p.&rdquo;</td></tr>
+            <tr><td data-k="Menu"><span class="mp"><img class="mi" data-i="rec" alt="">Recording/Media Setup &middot; p2</span></td><td>Resolution/Color Sampling</td><td><strong>1920x1080 YCC420 8&nbsp;bit</strong></td><td>Not 3840x2160 (4K).</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Initialize the SD card in the camera</strong> before each shoot: <span class="mp"><img class="mi" data-i="rec" alt="">Recording/Media Setup &middot; p1</span> &rsaquo; Initialize Media &rsaquo; SD Card A. This erases the card &mdash; make sure last shoot&rsquo;s footage is offloaded.</p>
+
+        <h4>2 &middot; Image, focus &amp; controls</h4>
+        <ul>
+          <li><strong>Shutter: 1/60.</strong> <span class="mp"><img class="mi" data-i="cam" alt="">Camera Setup &middot; p2</span> &rsaquo; Shutter Mode: <strong>Speed</strong>, then dial in 1/60.</li>
+          <li><strong>No Canon Log.</strong> <span class="mp"><img class="mi" data-i="cp" alt="">Custom Picture/HDR &middot; p1</span> &rsaquo; Preset: <strong>Off</strong>. Log footage looks grey and flat and needs color grading.</li>
+          <li><strong>Lens to MF.</strong> Flip the AF/MF switch on the side of the lens to <strong>MF</strong>.</li>
+          <li><strong>Peaking on, red.</strong> <span class="mp"><img class="mi" data-i="assist" alt="">Assistance Functions &middot; p2</span> &rsaquo; Peaking: VIDEO Output <strong>On</strong> (and Peaking: VF Output <strong>On</strong>) &rsaquo; Peaking 1 &rsaquo; Color: <strong>Red</strong>.</li>
+          <li><strong>Rule-of-thirds grid.</strong> <span class="mp"><img class="mi" data-i="assist" alt="">Assistance Functions &middot; p6</span> &rsaquo; Markers: VF+VIDEO Output <strong>On</strong> &rsaquo; Grid Marker: pick a color (e.g. <strong>White</strong>).</li>
+          <li><strong>Dials.</strong> <span class="mp"><img class="mi" data-i="sys" alt="">System Setup &middot; p4</span> &rsaquo; Camera Grip Ctrl Dial: <strong>ISO/Gain</strong>; Camera Ctrl Dial (body): <strong>Iris</strong>.</li>
+        </ul>
+
+        <h4>3 &middot; Audio</h4>
+        <ul>
+          <li>Both input switches on <strong>ANALOG</strong> (not AES/EBU &mdash; levels can&rsquo;t be adjusted there).</li>
+          <li><strong>INPUT 1 &mdash; on-camera shotgun mic.</strong> Source switch: <strong>MIC+48V</strong>. Plug the mic in <em>before</em> switching phantom power on.</li>
+          <li><strong>INPUT 2 &mdash; wireless mic receiver.</strong> Source switch: <strong>MIC</strong> (no phantom power).</li>
+          <li>Set levels <strong>manually</strong>; peaks around &minus;12&nbsp;dB.</li>
+          <li><strong>Wear headphones</strong> the whole time you&rsquo;re rolling.</li>
+        </ul>
+
+        <h4>Before you roll</h4>
+        <ul class="check">
+          <li>Battery charged, spare in the bag</li>
+          <li>SD card initialized, LOCK switch off</li>
+          <li>MP4 &middot; 1920&nbsp;&times;&nbsp;1080 &middot; 29.97P</li>
+          <li>Shutter 1/60, no Canon Log, lens on MF, peaking and grid on</li>
+          <li>Shotgun in INPUT 1 (+48V), wireless in INPUT 2, levels set, headphones on</li>
+          <li>Record a 10-second test and play it back</li>
+        </ul>
+        <p class="gfoot">Stuck? Ask the tech helper below &mdash; it knows the C200 manual.</p>
+      </div>
+
+      <!-- 02 PROJECT -->
+      <div class="gpanel" id="g-project" role="region" aria-labelledby="gh-project" hidden>
+        <div class="gtop"><h3 id="gh-project">Setting up a Premiere project</h3><button type="button" class="gclose">Close &times;</button></div>
+        <p class="lead"><strong>Set up the folders and settings before you import a single clip.</strong> Everything lives on your external SSD, never the internal drive. Follows the coaches&rsquo; videos 1&ndash;3.</p>
+
+        <h4>1 &middot; Folder structure (on the SSD)</h4>
+        <p>Make one blank template folder once, then <strong>duplicate it for every project</strong>. Name each copy <code>YYMMDD_ProjectTitle</code> (e.g. <code>261009_5x5</code>).</p>
+<div class="tree">YYMMDD_ProjectTitle/
+├── project files/
+│   └── scratch disk/
+├── footage/
+│   ├── interviews/
+│   └── b-roll/
+├── audio/
+├── graphics/
+├── miscellaneous/
+├── exports/
+└── scripts/</div>
+        <p>Copy the SD card into <strong>footage</strong>, sorting interviews from b-roll as you go.</p>
+
+        <h4>2 &middot; Create the project</h4>
+        <ol>
+          <li><strong>File &rsaquo; New &rsaquo; Project.</strong> Save it inside <strong>project files</strong>. Choose <strong>Skip import mode</strong>.</li>
+          <li><strong>Scratch disks:</strong> File &rsaquo; Project Settings &rsaquo; Scratch Disks &mdash; point every option at the <strong>scratch disk</strong> folder.</li>
+          <li><strong>Autosave:</strong> Premiere Pro &rsaquo; Settings &rsaquo; Auto Save &mdash; every <strong>5 minutes</strong>, <strong>20</strong> versions. Still press <strong>Cmd+S</strong> often.</li>
+          <li><strong>Workspace:</strong> Window &rsaquo; Workspaces &rsaquo; Editing. If panels get scrambled: <strong>Reset to Saved Layout</strong>.</li>
+        </ol>
+
+        <h4>3 &middot; Audio setting &mdash; before you import</h4>
+        <p>The C200 records each mic on its own channel. Imported as stereo, the shotgun on channel 1 plays <strong>only in the left ear</strong>. Fix it once, before importing:</p>
+        <ol>
+          <li><strong>Premiere Pro &rsaquo; Settings &rsaquo; Timeline</strong> (older versions: <strong>Audio</strong>) &rsaquo; Default Audio Tracks.</li>
+          <li><strong>Multichannel Mono Media:</strong> set to <strong>Mono</strong>.</li>
+          <li>Click <strong>OK</strong>.</li>
+        </ol>
+        <p>Now each mic lands on its own track (A1 shotgun, A2 wireless) and plays in both ears. Keep the one that sounds best; mute or delete the other.</p>
+        <p><strong>Already imported?</strong> Right-click the clips &rsaquo; <strong>Modify &rsaquo; Audio Channels</strong> &rsaquo; Clip Channel Format: Mono. Or use the coaches&rsquo; fix: Effects &rsaquo; <strong>Fill Right with Left</strong> (video 5).</p>
+
+        <h4>4 &middot; Import and make your sequence</h4>
+        <ol>
+          <li><strong>Import:</strong> drag the <strong>footage</strong> and <strong>audio</strong> folders from Finder into the Project panel. Folders become bins automatically.</li>
+          <li><strong>New bin:</strong> Cmd+B, for anything extra (graphics, music).</li>
+          <li><strong>First sequence:</strong> drag your first clip onto the empty timeline.</li>
+          <li>At the <strong>Clip Mismatch Warning</strong>, choose <strong>Change Sequence Settings</strong> so the sequence matches your 1080 30p footage.</li>
+          <li>Rename the sequence (e.g. <code>5x5_v1</code>) and save: <strong>Cmd+S</strong>.</li>
+        </ol>
+
+        <h4>Before you start editing</h4>
+        <ul class="check">
+          <li>Project folder is on the SSD and named <code>YYMMDD_ProjectTitle</code></li>
+          <li>Project file saved in <strong>project files</strong>; scratch disks point to <strong>scratch disk</strong></li>
+          <li>Autosave on: 5 min, 20 versions</li>
+          <li>Multichannel mono set to <strong>Mono</strong> before importing</li>
+          <li>Sequence matches the footage (1920&nbsp;&times;&nbsp;1080, 29.97&nbsp;fps)</li>
+        </ul>
+        <p class="gfoot">Stuck? Ask the tech helper below or watch the coaches&rsquo; videos 1&ndash;3.</p>
+      </div>
+
+      <!-- 03 EXPORT -->
+      <div class="gpanel" id="g-export" role="region" aria-labelledby="gh-export" hidden>
+        <div class="gtop"><h3 id="gh-export">Exporting from Premiere</h3><button type="button" class="gclose">Close &times;</button></div>
+        <p class="lead"><strong>Export every assignment at 1920&nbsp;&times;&nbsp;1080, H.264 &mdash; roughly 120&ndash;300&nbsp;MB for a 2-minute piece.</strong> Match Source copies your sequence&rsquo;s frame size, so shoot in 1080 and the export comes out 1080. Footage shot in 4K exports at 4K &mdash; a 500&nbsp;MB+ file that is slow to upload and slow to review.</p>
+
+        <h4>Export, step by step</h4>
+        <ol>
+          <li><strong>Click the timeline</strong> so the sequence is selected, not a clip in the Project panel.</li>
+          <li><strong>File &rsaquo; Export &rsaquo; Export Media</strong> (Cmd+M).</li>
+          <li><strong>File name:</strong> <code>YYMMDD_LastName_Assignment</code> &mdash; e.g. <code>261009_Fox_5x5</code>.</li>
+          <li><strong>Location:</strong> your project&rsquo;s <strong>exports</strong> folder on the SSD.</li>
+          <li><strong>Format:</strong> H.264. <strong>Preset:</strong> Match Source &ndash; Adaptive Medium Bitrate.</li>
+          <li><strong>Do the two checks below</strong>, then click <strong>Export</strong>.</li>
+          <li><strong>Watch the exported file</strong> start to finish before you upload it.</li>
+        </ol>
+
+        <h4>Two checks before you click Export</h4>
+        <table class="gtable">
+          <thead><tr><th>Check</th><th>Where</th><th>Should say</th><th>If not</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Frame size</strong></td><td data-k="Where:">Video section</td><td data-k="Should say:"><strong>1920&nbsp;&times;&nbsp;1080</strong></td><td data-k="If not:">It says 3840&nbsp;&times;&nbsp;2160 (4K): your footage was shot in 4K. Ask the tech helper or bring it to class.</td></tr>
+            <tr><td><strong>File size</strong></td><td data-k="Where:">Estimated File Size, bottom of dialog</td><td data-k="Should say:"><strong>1&ndash;2.5&nbsp;MB per second</strong> of video</td><td data-k="If not:">Recheck the frame size. Still big? Ask the tech helper or bring it to class.</td></tr>
+          </tbody>
+        </table>
+        <table class="gtable keep" style="max-width:22rem">
+          <thead><tr><th>Video length</th><th>Expected file size</th></tr></thead>
+          <tbody>
+            <tr><td>1 minute</td><td data-k="Size:">60&ndash;150 MB</td></tr>
+            <tr><td>2 minutes</td><td data-k="Size:">120&ndash;300 MB</td></tr>
+            <tr><td>4 minutes</td><td data-k="Size:">240&ndash;600 MB</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Before you upload</h4>
+        <ul class="check">
+          <li>File is <strong>.mp4</strong>, 1920&nbsp;&times;&nbsp;1080</li>
+          <li>Size is roughly 1&ndash;2.5 MB per second of video</li>
+          <li>Watched all the way through: no black gaps, no missing or muted audio</li>
+          <li>Audio peaks stay under &minus;6&nbsp;dB, dialogue around &minus;12&nbsp;dB</li>
+        </ul>
+        <p class="gfoot">Stuck? Ask the tech helper below, see the coaches&rsquo; <em>Exporting</em> video, or bring it to class.</p>
+      </div>
+    </div>
+
+    <script>
+    (function(){
+      var root = document.getElementById('guides');
+      if(!root) return;
+      var grid = root.querySelector('.gcards');
+      var ICONS = {"rec":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAoCAAAAAB2252uAAACEklEQVR4nM2VT0gUYRjGfzsba3ixNKRLmckG5QayQv8IwkNCRacNvEgFRRAdjCTomlES0TXqUFBQVBBkrWInoQ5SXgLxTxSCG5TQuiVmu0vsPh6cGfbbndlJT32HYd533t88z/fO+zEhseplrR5ZE7MuqGDspWX11Js5Bay7wGczVcVbrj8HFOwo/fYfdH4e5NCvhScdwOUxfYlGXjhP/JmjQHOt/ebdjRBOBjKpnWVeO38HMhoxka35YG+FeJnO42BmAIBQ78zCUBSAeADzqampDoAeSZpZaUWi+141Ztwx9F6S1GFHpyRV/aYAZEqu7nR66ywOvjoBwL6spGcrW7vY+1ySFBLAbLZSYXEPANtP1o8+FcCRIeeRJKndw9XDLjOuGXdM+O5nY8t6MxGLure2jvXhilnyLlH+lsNLto575mbnaeguqWiLQkP/4JscwLauR99JZZyJLdlPq9m7W83TUrYTNk8OXPq4Y2/anIN2QteOlzPKSlICWkbgwI8lN+/0wDq9v6INThPCwMSmWjfv7Kewxbt93OnLh1+bKbfXx2LeTOONeNvoLk8mnLzgIwSR5Hkjdr21ZiqL7ZWPpT0Z5nK+DHPmOLre5m/7IjXpm546xTPTvszfsxOejB74WyveN2PXW+q6LxP5etVbZ3iSqQ1exB+Kw1NmyvfMmauuZA7X/s869y2orvTQhv7jf/AyhIQuP3r3TXcAAAAASUVORK5CYII=","cam":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAAoCAAAAAB7xe3pAAABcUlEQVR4nN2VO0vDUBiGnyTVdFEq4tSCQ6uDFh10VByE/oE6OQkKlnZyFJxa+x+8jK5C/QGKkzq4iXhZHBy6iVhQ6fVzSGubxJ7UICK+S77vPefJm3M4nGiCD+l+oF+lAgCczJmfzmHhqdtkY2xj1KpERGRmZPNRLG0rQ4YeRESkSYGRPBURkWH1t23ZKSC+U5eqx4pWRUSkczeuU28eTEs/s/N1X1Tjn1K9yUYt9qN9kxpI3xz3Y/REBZrP8czKoCvbg0rkE5ozWymxq+aBrbtOL4AxraZmv8ySy4gKWq6JiIjmutner567MXo0ahVuqhcFug2Uq9Bn3UGvAkH7ROe6mipFgCOrTgFJ22g3KgMsNeuXcPsNSupCh1Cx1RWAcMmTqsSB3XafBDKeVA6Yb7T7Ygj0cw/q3gTzttPZAyYrSqqxAGTdVk5J7QMTZUd8EMw7BVWNgXbmdPPAmiqrlA2lXWZlKnZQbzX+zuHf/y9/AGXNOsUZljmHAAAAAElFTkSuQmCC","cp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD0AAAAoCAAAAABoEq0dAAACNklEQVR4nMWWP2gTURzHP7FZjKiQYBfJ8CBisokdMkgDuqWUi0MLTuHArdQ0GRw6SCfBLSFCwaEhaAUFQVLwz+RwGhDJQUA0Z4sETEVI6YlLXFrqkJfk8u/uQgZ/y73f9/f7vN/7c7z3PCdMYaemgfF2GpWfI6Lnoj43dOn+wei4uhqwoT0nAI3Y2IRMyoZuz/vl+ITskSP93Sbjl03Ma3XmFhdeb+0DCYD9r39twCE6lQFVXdIhB0AzbjrQlv2+nAFgc6YjzG441bbQWcgufWA2BrCTTjdRTrum/RGKeV1tEgN4VyolwW6v++l5eAjHT1mQwg+ncVvp8zRNIC+iUnAq3EfP8bEv4r8LLQfaO0bP5YDaBDs2bBkH2FJbVy4BzCVZA2p7mM++uaf/EPGbkFRqAI9KTiRYR/4e7sCMwp4bbrC2WYuovz8/gMdSqE9Cc+8FGaBZdV/bsuZ6FoCV464iRAMaQjQQQoh4vgUIIYSIV4Zqky8vRt9um0AafbiQYXwqynRj+U14kEbvMGMWvLzZPeSeb/RGftV2dgAUtBxsHwFa/cs1ivToZWc6FEwUOKgC4LstxTbt0xx/SmAe5JVxVipy3sHUysizcz3AYdfxKjuy9QrFSoM3OIouD/jVBKwHdg1u9tPuzJQ9hq8DjndoQdMKVv+G/BoVN3QoGAz1vF0AtLoW5okbus8ODS4CELwlO5qAbq3BlXYzigFMsGoxAFWmn5HiRC+PC6sDguc/vnqmo/8Bb7SN23m7TPUAAAAASUVORK5CYII=","assist":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAoCAAAAACZGfaQAAACfElEQVR4nL2VS0hUYRTHf9d7y1dkzCCWk0m2qKSiQRcRBfak16ppU0aLRCooeim4CKOE7LHIMjJSKwwidGELIcokwk1SkFjZwqQoLWMkw8Ah5nFafNN45zpzr276b+797jm/7zy+73A1YaZKmTEBIiLywmXrk3ZfTFLIZod9F5oRA4Ax8MxnfACWZ3yYYN4S5dkXJHuR/wuMTU2sCGpFqsAVGE2D62q7AQ1aZQ+QOTWxIqiVP9lwWi5B5i9lOwULgsOGFTF1rM2PdjhyC/ZlARC4C+XG7VDijhVBrayFLdIBvFG7NYMxFMwleWK9QLtshzVRUzHsljZskHLwhAY1aFGWl8AzKYHZyZCqTDgnFeAOKMsBWBrpB0qTIXlgDAdcUKkMo2lQJ0fB05YMAXxyB7SPynAZMsZ+z4Xz7TZIlxTDNvU9XABl0gCzRqyIEet2QcnGkfx8jqnVoNfLcb778OZ4fKQnPBcOyTRlmOgfzx0u9KpCgElE4+1eB6TGhBiAAKn7bYCnX4k5w9YetZrTZIPsikPO5r8KrYta5OTjE0ds8zO1ohO3iLSC9jpRp3ZSIyJx8xJVPUileg0eXNE6jSi9AHSIiMhFSB9yjlIPQFUY8F+AwJkpQazIzwewHt7dA6rHgZY+J6Q5gPFwA1RP0N8IGpEKByRyE3y5VzS+XaUiTM4N6HxiX/4joFukFNCBhogXVobjy7cgm2C1iHxOBWBZSLqAZjvEAJpERJqydV1f3CMiO0DTdV3XdS0hArgm4s/8vT5ZRJJzKYufQArr87KUYnNiiZLyKdH1iqvFsARx11nDxtQffVoR/7WkyD+ZkcJGB+diALT/8kf+C0VDn1V2ei3tAAAAAElFTkSuQmCC","sys":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACcAAAAoCAAAAABYnrw8AAABUUlEQVR4nGP8z0AUYCJOGQMLusCffcdUHGQwFf5HATcKRBgYGBhUVv9HAyjqrgUxQnXH41H3owzuCN+PuNVd14WpYqz+h64MoW4nH0wZzxoMVQh1u9lgypQvY1EGU3cZbprrW2zKoOr+GMCUxf9Blf+Hom42PDhR3fYpnHUDsroQuLp6ZGW3tRgYLJHV2cDV+SIp2y7AwMDAcP3//////0PSAStc3XlEjHZ6f2BgYGBYjRS/PgjZ51DDvoZDBVYh2ZuCUOcwbculD///39eH8oV/IKmbzIAK+LR4YcwGZH8cZsAFxD4iq/vOg0vdApRw/h+PQ1kIarz9v82FVZnmZzR1/9cwY1Emf+8/urr/m4UxlGk8+I+p7v/TQDRlYZ/+Y1P3//96cSRVSpv+/8eh7v91hDI1tJyEUh5oiMKZnnwMKIAJD484mVF11FTHSOXyHgB5KxpPkfewkQAAAABJRU5ErkJggg=="};
+      root.querySelectorAll('img.mi[data-i]').forEach(function(im){ im.src = ICONS[im.getAttribute('data-i')]; });
+      var cards = root.querySelectorAll('.gcard');
+      var mq = window.matchMedia('(max-width:640px)');
+      function closeAll(){
+        cards.forEach(function(c){
+          c.setAttribute('aria-expanded','false');
+          var p = document.getElementById(c.getAttribute('aria-controls'));
+          p.hidden = true;
+        });
+      }
+      function place(card, panel){
+        if(mq.matches){ card.insertAdjacentElement('afterend', panel); }
+        else { root.appendChild(panel); }
+      }
+      cards.forEach(function(card){
+        card.addEventListener('click', function(){
+          var panel = document.getElementById(card.getAttribute('aria-controls'));
+          var wasOpen = card.getAttribute('aria-expanded') === 'true';
+          closeAll();
+          if(wasOpen) return;
+          place(card, panel);
+          card.setAttribute('aria-expanded','true');
+          panel.hidden = false;
+          var r = panel.getBoundingClientRect();
+          if(r.top > window.innerHeight * 0.85 || r.top < 0){
+            panel.scrollIntoView({behavior:'smooth', block:'start'});
+          }
+        });
+      });
+      root.querySelectorAll('.gclose').forEach(function(b){
+        b.addEventListener('click', function(){
+          var panel = b.closest('.gpanel');
+          var card = root.querySelector('[aria-controls="'+panel.id+'"]');
+          closeAll();
+          card.focus({preventScroll:true});
+          var r = card.getBoundingClientRect();
+          if(r.top < 0) card.scrollIntoView({behavior:'smooth', block:'center'});
+        });
+      });
+      mq.addEventListener('change', function(){
+        cards.forEach(function(c){
+          if(c.getAttribute('aria-expanded') === 'true'){
+            place(c, document.getElementById(c.getAttribute('aria-controls')));
+          }
+        });
+      });
+    })();
+    </script>
 
     <p>For quick technical questions at 2am, there's also a helper below. It knows the Canon C200 manual and our tech team's Premiere tutorial series, and it will point you to the exact video and timestamp when the answer is in there.</p>
 
