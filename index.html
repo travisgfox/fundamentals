@@ -182,9 +182,14 @@
   .subform .ok{color:var(--signal);font-weight:700;font-family:var(--display);}
   .subform .prog{height:8px;background:var(--signal-soft);}
   .subform .prog .bar{height:100%;width:0;background:var(--signal);transition:width .3s;}
-  .contact .footrow{display:flex;justify-content:center;align-items:center;gap:1rem 3rem;flex-wrap:wrap;}
-  a.sub.ffbtn{display:inline-block;margin:.2rem 0 0;white-space:normal;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--paper);background:var(--ink);padding:.55rem 1rem;}
-  a.sub.ffbtn:hover{background:var(--signal);color:var(--paper);}
+  .contact .footrow{display:grid;grid-template-columns:1fr 1fr;}
+  .contact .footrow > div{padding:0 1rem;}
+  .contact .footrow > div + div{border-left:1px solid var(--rule);}
+  @media (max-width:640px){
+    .contact .footrow{grid-template-columns:1fr;}
+    .contact .footrow > div + div{border-left:0;border-top:1px solid var(--rule);margin-top:.8rem;padding-top:.8rem;}
+  }
+  a.sub.ffbtn{font:inherit;letter-spacing:normal;white-space:normal;margin:0;}
   .contact .subform{grid-column:1 / -1;max-width:none;margin:0;border:0;border-top:1px solid var(--rule);text-align:left;}
   .subform textarea.short{min-height:70px;}
   .subform .or{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);text-align:center;}
