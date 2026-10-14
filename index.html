@@ -182,6 +182,12 @@
   .subform .ok{color:var(--signal);font-weight:700;font-family:var(--display);}
   .subform .prog{height:8px;background:var(--signal-soft);}
   .subform .prog .bar{height:100%;width:0;background:var(--signal);transition:width .3s;}
+  .contact .footrow{display:flex;justify-content:center;align-items:center;gap:1rem 3rem;flex-wrap:wrap;}
+  a.sub.ffbtn{display:inline-block;margin:.2rem 0 0;white-space:normal;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--paper);background:var(--ink);padding:.55rem 1rem;}
+  a.sub.ffbtn:hover{background:var(--signal);color:var(--paper);}
+  .contact .subform{grid-column:1 / -1;max-width:none;margin:0;border:0;border-top:1px solid var(--rule);text-align:left;}
+  .subform textarea.short{min-height:70px;}
+  .subform .or{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);text-align:center;}
 
   /* ---------- SECTIONS ---------- */
   section{margin-bottom:3.25rem;}
@@ -549,8 +555,16 @@
         <span class="v">#422 (end of the faculty hallway)</span>
       </div>
       <div class="cell foot">
-        <span class="k">Anonymous feedback — always welcome</span>
-        <span class="v"><a href="https://docs.google.com/forms/d/e/1FAIpQLScsxrw9jVM8E_vRkMwTMBaHXVF_zizjJ2mamPGB0wEXT4jnaQ/viewform?usp=header">Submit feedback</a></span>
+        <div class="footrow">
+          <div>
+            <span class="k">Anonymous feedback — always welcome</span>
+            <span class="v"><a href="https://docs.google.com/forms/d/e/1FAIpQLScsxrw9jVM8E_vRkMwTMBaHXVF_zizjJ2mamPGB0wEXT4jnaQ/viewform?usp=header">Submit feedback</a></span>
+          </div>
+          <div>
+            <span class="k">Weekly film festival — we watch in class</span>
+            <span class="v"><a class="sub ffbtn" href="#" data-asg="film-fest">Submit a video for our weekly film festival!</a></span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="label">Book office hours — pick a time</div>
@@ -1210,16 +1224,24 @@
   }
 
   function panel(a) {
-    var key = a.dataset.asg, pitch = !!PITCH[key], multi = !!MULTI[key];
+    var key = a.dataset.asg, pitch = !!PITCH[key], multi = !!MULTI[key], film = key === 'film-fest';
     var box = document.createElement('form');
     box.className = 'subform';
     box.setAttribute('data-asg', key);
     box.noValidate = false;
     box.innerHTML =
-      '<span class="ttl">' + esc(a.textContent.replace('↓', '').trim()) + '</span>' +
+      '<span class="ttl">' + (film ? 'Weekly film festival' : esc(a.textContent.replace('↓', '').trim())) + '</span>' +
       '<label>Your name</label><input name="nm" required autocomplete="name">' +
       '<label>Your email</label><input name="em" type="email" required autocomplete="email" placeholder="first.last00@journalism.cuny.edu">' +
-      (pitch
+      (film
+        ? '<span class="note">Your own work or something you love — a short doc, a news piece, a music video. We\'ll screen picks in class.</span>' +
+          '<label>Title (and who made it)</label><input name="tt" required maxlength="150">' +
+          '<label>Why should we watch? (optional)</label><textarea name="tx" class="short" maxlength="1000"></textarea>' +
+          '<label>Link — YouTube, Vimeo, Instagram, Drive…</label><input name="ln" type="url" placeholder="https://">' +
+          '<span class="or">— or upload a file —</span>' +
+          '<input name="fl" type="file" accept=".mp4,.mov,.m4v,video/mp4,video/quicktime">' +
+          '<div class="prog" hidden><div class="bar"></div></div>'
+        : pitch
         ? '<label>Working title</label><input name="tt" required maxlength="150">' +
           '<label>Your pitch</label><textarea name="tx" required placeholder="Paste your full pitch — who, what, why now, your access, and what we\'ll see."></textarea>' +
           '<span class="note">Formatting is kept as paragraphs. You\'ll get a Google Doc of your pitch shared with you — that\'s where my comments will appear.</span>'
@@ -1230,7 +1252,7 @@
             '<span class="note">Export from Premiere as H.264 (Match Source – High Bitrate). Max 20 GB. Keep this tab open until it says Received.</span>') +
           '<div class="prog" hidden><div class="bar"></div></div>') +
       '<span class="err" hidden></span>' +
-      '<div class="row"><span class="note st">Goes to Travis only</span><button type="submit">' + (pitch ? 'Submit pitch' : 'Upload') + '</button></div>';
+      '<div class="row"><span class="note st">Goes to Travis only</span><button type="submit">' + (film ? 'Submit' : pitch ? 'Submit pitch' : 'Upload') + '</button></div>';
     box.em.value = mem('fvr-email');
     box.nm.value = mem('fvr-name');
 
@@ -1248,6 +1270,42 @@
       var email = box.em.value.trim().toLowerCase(), who = box.nm.value.trim();
       mem('fvr-email', email); mem('fvr-name', who);
       btn.disabled = true;
+
+      if (film) {
+        var link = box.ln.value.trim(), ff = box.fl.files[0], mine = false;
+        if (!link && !ff) return fail('Paste a link or choose a video file.');
+        var base = { action: 'film', email: email, who: who, title: box.tt.value, note: box.tx.value };
+        function thanks() {
+          box.innerHTML = '<span class="ok">Got it ✓</span><span class="note">Thanks, ' + esc(who.split(' ')[0] || 'friend') +
+            ' — your pick is in the queue for the film festival.</span>';
+        }
+        try {
+          if (link) {
+            btn.textContent = 'Sending…';
+            var lr = await api(Object.assign({ step: 'link', url: link }, base));
+            return lr.ok ? thanks() : fail(lr.error);
+          }
+          busy++; mine = true;
+          btn.textContent = 'Starting…';
+          var fs = await api(Object.assign({ step: 'start', fileName: ff.name, size: ff.size, mimeType: ff.type }, base));
+          if (!fs.ok) { busy--; return fail(fs.error); }
+          var fprog = box.querySelector('.prog'), fbar = fprog.firstChild;
+          fprog.hidden = false;
+          btn.textContent = 'Uploading…';
+          var fu = await upload(ff, fs.uploadUrl, function (n) {
+            var pct = Math.floor(100 * n / ff.size);
+            fbar.style.width = pct + '%';
+            st.textContent = pct + '% · ' + mb(n) + ' of ' + mb(ff.size);
+          }, function (m) { st.textContent = m; });
+          st.textContent = 'Checking…';
+          var fd = await api(Object.assign({ step: 'done', fileId: fu.id || '', name: fs.name }, base));
+          busy--; mine = false;
+          return fd.ok ? thanks() : fail(fd.error);
+        } catch (e) {
+          if (mine) busy--;
+          return fail(e.message === 'Failed to fetch' ? 'Could not reach the server. Check your connection and try again.' : e.message);
+        }
+      }
 
       if (pitch) {
         btn.textContent = 'Sending…';
@@ -1297,7 +1355,7 @@
     var a = e.target.closest('a.sub');
     if (!a || !a.dataset.asg) return;
     e.preventDefault();
-    var row = a.closest('.hw') || a.parentElement;
+    var row = a.closest('.hw') || a.closest('.cell.foot') || a.parentElement;
     var open = row.parentElement.querySelector('.subform[data-asg="' + a.dataset.asg + '"]');
     if (open) { if (!busy) open.remove(); return; }
     var box = panel(a);
