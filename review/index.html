@@ -262,6 +262,7 @@ let events = [], markers = [];
 let discardArmed = false, stopping = false, recTimer = null;
 let ptr = {x:0, y:0, t:0}, flash = null;
 let mail = null;
+let posterPromise = null, posterAt = 0;   // still frame + play button for the email
 
 // ---------- helpers ----------
 function fmt(s){ if (!isFinite(s)) s = 0; s = Math.max(0, s); const m = Math.floor(s/60); return m + ':' + String(Math.floor(s - m*60)).padStart(2,'0'); }
@@ -556,7 +557,9 @@ function drawScene(c, recorded){
   }
 }
 function frame(){
-  if (session && !session.paused){ drawScene(g, true); session.addFrame(); }
+  if (session && !session.paused){ drawScene(g, true); session.addFrame();
+    // grab a still for the email: first moment ≥3 s in with the student's video playing (fallback: at stop)
+    if (!posterPromise && !vid.paused && session.elapsed() > 3000){ posterPromise = makePoster(); posterAt = session.elapsed(); } }
   drawScene(og, false);
   updateTC();
 }
@@ -763,10 +766,24 @@ async function startReview(){
       recChunks = [];
       session = startMediaRecorderWebm(chunk => { if (recWritable) recChain = recChain.then(() => recWritable.write(chunk)); else recChunks.push(chunk); });
     }
-    recMime = session.format; rec = session;
+    recMime = session.format; rec = session; posterPromise = null; posterAt = 0;
     events = []; markers = []; renderMarkers();
     logEvent('start'); setRecUI(true);
   }catch(e){ console.error(e); rec = null; session = null; toast('Couldn’t start recording: ' + e.message, 'err', 12000); }
+}
+function makePoster(){
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  x.drawImage(stage, 0, 0, W, H);
+  x.fillStyle = 'rgba(0,0,0,.28)'; x.fillRect(0, 0, W, H);
+  const cx = W/2, cy = H/2, r = 92;
+  x.fillStyle = 'rgba(0,0,0,.55)'; x.beginPath(); x.arc(cx, cy, r + 8, 0, Math.PI*2); x.fill();
+  x.fillStyle = '#FF7A00'; x.beginPath(); x.arc(cx, cy, r, 0, Math.PI*2); x.fill();
+  x.fillStyle = '#fff'; x.beginPath(); x.moveTo(cx - 30, cy - 44); x.lineTo(cx - 30, cy + 44); x.lineTo(cx + 50, cy); x.closePath(); x.fill();
+  x.font = '700 44px "Barlow Semi Condensed", Arial, sans-serif'; x.textAlign = 'center';
+  x.lineWidth = 8; x.lineJoin = 'round'; x.strokeStyle = 'rgba(0,0,0,.6)'; x.strokeText('WATCH MY VIDEO FEEDBACK', cx, cy + r + 70);
+  x.fillStyle = '#fff'; x.fillText('WATCH MY VIDEO FEEDBACK', cx, cy + r + 70);
+  return new Promise(res => c.toBlob(b => res(b), 'image/jpeg', 0.85));
 }
 function togglePauseRec(){
   if (!session || stopping) return;
@@ -788,6 +805,7 @@ async function stopReview(save = true){
   if (!rec || rec === 'starting' || stopping) return;
   stopping = true;
   if (session.paused) session.resume();
+  if (save && !posterPromise && session.elapsed() > 0) posterPromise = makePoster();
   logEvent('stop'); vid.pause();
   $('recState').textContent = save ? 'Saving…' : 'Discarding…';
   const durationSec = +(session.elapsed()/1000).toFixed(1);
@@ -812,6 +830,9 @@ async function stopReview(save = true){
       const json = JSON.stringify(meta, null, 2), jsonName = recFileName.replace(/\.(mp4|webm)$/, '.json');
       if (recWritable){
         const fb = await it.dir.getDirectoryHandle('_feedback', {create:true});
+        try{ const pb = posterPromise && await posterPromise;
+          if (pb){ const pw = await (await fb.getFileHandle(jsonName.replace(/\.json$/, '.jpg'), {create:true})).createWritable(); await pw.write(pb); await pw.close(); }
+        }catch(e){ console.warn('poster', e); }
         const jw = await (await fb.getFileHandle(jsonName, {create:true})).createWritable(); await jw.write(json); await jw.close();
         handoff = {meta, audioFile: aacHandle && audioBytes ? aacHandle : null, student: it.student};
         toast('Saved. The email for ' + it.student + ' is being written — pick your next student.', '', 6000);
@@ -943,7 +964,7 @@ window.addEventListener('beforeunload', e => { if (rec || pending.size){ e.preve
 
 renderMarkers();
 initSignIn();
-window.__rat = { pickFolder, loadStudent, students: () => students(), startReview, stopReview, togglePauseRec, refresh, get data(){ return data; } };
+window.__rat = { pickFolder, loadStudent, students: () => students(), startReview, stopReview, togglePauseRec, refresh, makePoster, get data(){ return data; } };
 })();
 </script>
 </body>
