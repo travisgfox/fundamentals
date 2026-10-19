@@ -182,6 +182,7 @@
           <div class="actions">
             <span id="mailStatus"></span>
             <button id="mailClose">Close</button><span class="gap"></span>
+            <button id="mailRedo" title="Run the AI summary again (replaces the email text)">Rewrite summary</button>
             <button id="mailSkip">Skip — no email</button>
             <button id="mailDraft" disabled>Save as Gmail draft</button>
             <button id="mailSend" class="primary" disabled>Send</button>
@@ -864,7 +865,7 @@ function openMail(r){
 ['mailTo','mailSubject','mailBody'].forEach(id => $(id).addEventListener('input', () => { if (mail) mail.dirty = true; }));
 function mailStatus(t){ $('mailStatus').textContent = t; }
 function mailButtons(){ const ok = !!(mail && mail.ready && !mail.busy);
-  $('mailSend').disabled = !(mail && !mail.busy); $('mailDraft').disabled = !ok; $('mailSkip').disabled = !!(mail && mail.busy); }
+  $('mailSend').disabled = !(mail && !mail.busy); $('mailDraft').disabled = !ok; $('mailRedo').disabled = !(mail && !mail.busy); $('mailSkip').disabled = !!(mail && mail.busy); }
 async function pollReady(m){
   while (m.open && !m.ready){
     try{ const r = await api({step:'status', base: m.base});
@@ -895,6 +896,17 @@ function closeMail(){
 $('mailSend').onclick = () => mailAct('send');
 $('mailDraft').onclick = () => mailAct('draft');
 $('mailSkip').onclick = () => mailAct('skip');
+$('mailRedo').onclick = async () => {
+  if (!mail || mail.busy) return;
+  const m = mail; m.busy = true; mailButtons(); mailStatus('Rewriting the summary — about a minute…');
+  try{
+    const r = await api({step:'resummarize', base: m.base});
+    if (mail === m){ $('mailBody').value = r.body; m.dirty = false;
+      mailStatus(r.problem ? 'Gemini failed again: ' + r.problem : 'New summary in. Edit anything, then Send.'); }
+    refresh().catch(()=>{});
+  }catch(e){ if (mail === m) mailStatus('That didn’t work: ' + e.message); }
+  m.busy = false; if (mail === m) mailButtons();
+};
 $('mailClose').onclick = () => closeMail();
 
 // ================= wiring =================
