@@ -69,7 +69,7 @@
   .sw{width:12px;height:12px;flex:none;background:var(--gray)}
   .sw.missing{background:transparent;border:2px solid var(--gray)}
   .sw.todo{background:var(--orange)} .sw.writing{background:var(--sky)} .sw.ready{background:var(--yellow)}
-  .sw.sent,.sw.drafted{background:var(--lime)} .sw.skipped,.sw.reviewed{background:var(--gray)}
+  .sw.sent,.sw.drafted{background:var(--lime)} .sw.queued{background:transparent;border:2px solid var(--lime)} .sw.skipped,.sw.reviewed{background:var(--gray)}
   .tag{font-size:10px;font-weight:700;letter-spacing:.08em;padding:1px 5px;border:1px solid var(--purple);color:#C9B6FF}
   .legend{padding:10px 16px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:11px;color:var(--muted)}
   .legend span{display:flex;align-items:center;gap:6px}
@@ -151,7 +151,8 @@
       <div class="legend">
         <span><i class="sw missing"></i>Not turned in</span><span><i class="sw todo"></i>Needs review</span>
         <span><i class="sw writing"></i>Writing email</span><span><i class="sw ready"></i>Email ready</span>
-        <span><i class="sw sent"></i>Sent / drafted</span><span><i class="tag">LATE</i>Turned in late</span>
+        <span><i class="sw queued"></i>Queued to send</span><span><i class="sw sent"></i>Sent / drafted</span>
+        <span><i class="tag">LATE</i>Turned in late</span>
       </div>
     </aside>
 
@@ -331,6 +332,7 @@ function enterApp(){
   ensureMedia();       // camera bubble right away
   tryReconnect();
   setInterval(() => { if (signedIn() && (pending.size || (data && data.reviews.some(r => /^Writing/.test(r.status))))) refresh().catch(()=>{}); }, 20000);
+  setInterval(() => { if (signedIn() && !mail && data && data.reviews.some(r => /^Queued/.test(r.status))) refresh().catch(()=>{}); }, 120000);
 }
 
 // ================= data =================
@@ -358,7 +360,7 @@ function students(){
     if (/\(test\)/i.test(r.name) && !sub) return;
     list.push(Object.assign({student: r.name, email: r.email, sub}, statusOf(sub, a)));
   });
-  const order = {todo:0, writing:1, ready:2, reviewed:3, drafted:4, sent:5, skipped:6, missing:7};
+  const order = {todo:0, writing:1, ready:2, reviewed:3, queued:4, drafted:5, sent:6, skipped:7, missing:8};
   return list.sort((x, y) => (order[x.status] - order[y.status]) || x.student.localeCompare(y.student));
 }
 function statusOf(sub, a){
@@ -372,6 +374,7 @@ function statusOf(sub, a){
   if (r){
     const s = r.status;
     if (/^Sent/i.test(s)) return {status:'sent', label:'Sent', base, late, review:r};
+    if (/^Queued/i.test(s)) return {status:'queued', label:'Queued', base, late, review:r};
     if (/draft/i.test(s)) return {status:'drafted', label:'Gmail draft', base, late, review:r};
     if (/^Skipped/i.test(s)) return {status:'skipped', label:'Skipped', base, late, review:r};
     if (/^Writing/i.test(s)) return {status:'writing', label:'Writing email…', base, late, review:r};
@@ -397,23 +400,23 @@ function render(){
     box.appendChild(el);
   });
   // emails column: everything waiting on you, all assignments
-  const ready = data.reviews.filter(r => /^(Email ready|Writing)/i.test(r.status))
+  const ready = data.reviews.filter(r => /^(Email ready|Writing|Queued)/i.test(r.status))
     .sort((x, y) => x.updated < y.updated ? -1 : 1);
   const extra = [...pending].filter(b => !ready.some(r => r.base === b));
   const mb = $('mailList'); mb.innerHTML = '';
   $('mailCount').textContent = ready.filter(r => /^Email ready/i.test(r.status)).length + ' ready';
   extra.forEach(b => mb.appendChild(mailRow({student: studentFromBase(b), assignment: '', status:'Writing email…', base:b})));
   ready.forEach(r => mb.appendChild(mailRow(r)));
-  if (!mb.children.length) mb.innerHTML = '<div class="empty-note">Nothing waiting. Finished reviews show up here while the summary is written, then turn yellow when the email is ready.</div>';
+  if (!mb.children.length) mb.innerHTML = '<div class="empty-note">Nothing waiting. Finished reviews show up here while the summary is written, then turn yellow when the email is ready. Sent emails wait here (hollow green) until Drive can play the video.</div>';
 }
 function studentFromBase(b){ const m = b.match(/^([^,]+),\s*([^—]+)—/); return m ? m[2].trim() + ' ' + m[1].trim() : b; }
 function mailRow(r){
-  const writing = /^Writing/i.test(r.status);
+  const writing = /^Writing/i.test(r.status), queued = /^Queued/i.test(r.status);
   const el = document.createElement('div');
   el.className = 'row' + (writing ? ' dim' : '') + (mail && mail.base === r.base ? ' active' : '');
-  el.innerHTML = `<i class="sw ${writing ? 'writing' : 'ready'}"></i><span class="nm"></span><span class="st"></span>`;
+  el.innerHTML = `<i class="sw ${writing ? 'writing' : queued ? 'queued' : 'ready'}"></i><span class="nm"></span><span class="st"></span>`;
   el.querySelector('.nm').textContent = r.student;
-  el.querySelector('.st').textContent = writing ? 'Writing…' : (shortAsg(r.assignment) || 'Ready');
+  el.querySelector('.st').textContent = writing ? 'Writing…' : queued ? 'Queued' : (shortAsg(r.assignment) || 'Ready');
   if (!writing) el.onclick = () => openMail(r);
   return el;
 }
@@ -854,18 +857,18 @@ function openMail(r){
   $('mailTitle').textContent = r.student + ' — ' + shortAsg(r.assignment);
   $('mailTo').value = r.to || ''; $('mailSubject').value = r.subject || ''; $('mailBody').value = r.body || '';
   $('mail').style.display = 'flex'; $('center').classList.add('mailing'); mailButtons(); render();
-  mailStatus('Checking that the video has reached Drive…');
+  mailStatus(/^Queued/i.test(r.status) ? 'Queued — it goes out once Drive can play the video. Send again to replace the text, or Skip to cancel.'
+    : 'Edit anything, then Send. It goes out as soon as Drive can play the video. The link goes where it says [video link].');
   pollReady(mail);
 }
 ['mailTo','mailSubject','mailBody'].forEach(id => $(id).addEventListener('input', () => { if (mail) mail.dirty = true; }));
 function mailStatus(t){ $('mailStatus').textContent = t; }
 function mailButtons(){ const ok = !!(mail && mail.ready && !mail.busy);
-  $('mailSend').disabled = !ok; $('mailDraft').disabled = !ok; $('mailSkip').disabled = !!(mail && mail.busy); }
+  $('mailSend').disabled = !(mail && !mail.busy); $('mailDraft').disabled = !ok; $('mailSkip').disabled = !!(mail && mail.busy); }
 async function pollReady(m){
   while (m.open && !m.ready){
     try{ const r = await api({step:'status', base: m.base});
-      if (r.ready){ m.ready = true; mailStatus('Edit anything, then Send. The video link is added where it says [video link].'); }
-      else mailStatus('Waiting for Drive to finish uploading the video…'); }catch(e){ mailStatus('Can’t check the video: ' + e.message); }
+      if (r.ready) m.ready = true; }catch(e){}
     mailButtons();
     if (!m.ready) await new Promise(r => setTimeout(r, 10000));
   }
@@ -877,7 +880,7 @@ async function mailAct(step){
   mailStatus(step === 'send' ? 'Sending…' : step === 'draft' ? 'Saving draft…' : 'Skipping…');
   try{
     await api({step, base: mail.base, to, subject: $('mailSubject').value.trim(), text: $('mailBody').value});
-    toast(step === 'send' ? 'Sent to ' + to + '.' : step === 'draft' ? 'Saved to your Gmail drafts.' : 'Skipped — no email for this one.', '', 6000);
+    toast(step === 'send' ? 'Queued — it goes to ' + to + ' once Drive can play the video (usually 10–20 min).' : step === 'draft' ? 'Saved to your Gmail drafts.' : 'Skipped — no email for this one.', '', 6000);
     mail.dirty = false; closeMail(); await refresh();
   }catch(e){ mail.busy = false; mailButtons(); mailStatus('That didn’t work: ' + e.message); }
 }
