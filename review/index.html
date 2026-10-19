@@ -71,6 +71,16 @@
   .toast{position:fixed;right:18px;bottom:18px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;max-width:420px;display:none;box-shadow:0 8px 30px #000a}
   .toast.ok{border-color:var(--ok)} .toast.err{border-color:var(--rec)}
   .warnbar{background:#3a2a10;color:#f0c674;padding:8px 18px;font-size:13px;display:none}
+  .signin{margin-top:12px;font-size:12px;color:var(--muted)}
+  #gsiState{margin-top:6px}
+  .mail{position:absolute;inset:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;display:none;flex-direction:column;gap:8px;padding:16px;overflow:auto;z-index:5}
+  .mail h2{margin:0 0 4px;font-size:15px}
+  .mail .row{display:flex;gap:8px;align-items:center}
+  .mail label{width:64px;color:var(--muted);font-size:12px}
+  .mail input,.mail textarea{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:5px;padding:7px 9px;font:inherit}
+  .mail textarea{min-height:240px;resize:vertical;line-height:1.45}
+  .mail .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  #mailStatus{color:var(--muted);font-size:12px;flex:1;min-width:200px}
 </style>
 </head>
 <body>
@@ -86,6 +96,7 @@
         <button data-f="all">All</button>
         <button id="rescanBtn" title="Rescan folder">↻</button>
       </div>
+      <div class="signin"><div id="gsiBtn"></div><div id="gsiState"></div></div>
     </header>
     <div id="queue"></div>
   </aside>
@@ -109,6 +120,18 @@
       <div class="noteBox" id="noteBox">
         <span id="noteAt" style="color:var(--accent);font-variant-numeric:tabular-nums"></span>
         <input id="noteInput" placeholder="Marker note (optional) — Enter to save, Esc to cancel">
+      </div>
+      <div class="mail" id="mail">
+        <h2 id="mailTitle">Email</h2>
+        <div class="row"><label>To</label><input id="mailTo" autocomplete="off"></div>
+        <div class="row"><label>Subject</label><input id="mailSubject" autocomplete="off"></div>
+        <textarea id="mailBody" spellcheck="true"></textarea>
+        <div class="actions">
+          <span id="mailStatus"></span>
+          <button id="mailSkip">Skip</button>
+          <button id="mailDraft" disabled>Save as draft</button>
+          <button id="mailSend" class="primary" disabled>Send</button>
+        </div>
       </div>
     </div>
 
@@ -150,11 +173,14 @@
 <video id="cam" playsinline muted autoplay style="display:none"></video>
 
 <script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
 <script>
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
 const VIDEO_EXT = /\.(mp4|mov|m4v|webm)$/i;
+const BACKEND = 'https://script.google.com/macros/s/AKfycbyvB8Lv2BiFlCt9qhdtMTAA5C_ij_d_eEmXgISLn2UbE85neKnj_Gh967GhfVmL0RRJ/exec';
+const GOOGLE_CLIENT_ID = '';   // OAuth web client for fundamentals.travisfox.com (set once it exists)
 const W = 1280, H = 720;
 const params = new URLSearchParams(location.search);
 
@@ -334,6 +360,7 @@ async function ensureAudio(){
 let loadToken = 0;
 async function loadItem(it){
   if (rec){ toast('Stop or discard the current review first.','err'); return; }
+  if (mail && mail.open){ toast('Finish the email first — Send, Save as draft, or Skip.','err'); return; }
   await ensureAudio();
   current = it; const my = ++loadToken;
   vid.pause();
@@ -540,7 +567,25 @@ async function planWebCodecs(){
   return {vcfg, vmux, acfg, amux, track, reader, first};
 }
 
-function startWebCodecs(plan, target){
+// Raw AAC frames -> ADTS stream (.aac), a format Gemini accepts directly as audio/aac.
+function adtsFramer(sampleRate, channels){
+  const rates = [96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350];
+  const sfi = rates.indexOf(sampleRate);
+  if (sfi < 0) return null;
+  return chunk => {
+    const len = chunk.byteLength + 7, out = new Uint8Array(len);
+    out[0] = 0xFF; out[1] = 0xF1;                                  // MPEG-4, no CRC
+    out[2] = (1 << 6) | (sfi << 2) | (channels >> 2);              // AAC-LC
+    out[3] = ((channels & 3) << 6) | (len >> 11);
+    out[4] = (len >> 3) & 0xFF;
+    out[5] = ((len & 7) << 5) | 0x1F;
+    out[6] = 0xFC;
+    chunk.copyTo(out.subarray(7));
+    return out;
+  };
+}
+
+function startWebCodecs(plan, target, audioSink){
   const muxer = new Mp4Muxer.Muxer({
     target,
     video: {codec: plan.vmux, width: W, height: H},
@@ -551,7 +596,7 @@ function startWebCodecs(plan, target){
   let err = null, stopped = false, lastKey = -1e12, lastTs = -1e12, samples = 0;
   const ve = new VideoEncoder({output: (c, m) => muxer.addVideoChunk(c, m), error: e => { err = e; console.error(e); }});
   ve.configure(plan.vcfg);
-  const ae = new AudioEncoder({output: (c, m) => muxer.addAudioChunk(c, m), error: e => { err = e; console.error(e); }});
+  const ae = new AudioEncoder({output: (c, m) => { muxer.addAudioChunk(c, m); if (audioSink) audioSink(c); }, error: e => { err = e; console.error(e); }});
   ae.configure(plan.acfg);
   const base = performance.now();
 
@@ -630,8 +675,9 @@ function startMediaRecorderWebm(onChunk){
 // ---------- recording ----------
 let session = null;      // active encoder session
 let recTarget = null;    // ArrayBufferTarget when we can't write to the folder
+let aacName = '', aacWritable = null, aacParts = null, aacChain = Promise.resolve(), aacHandle = null;
 async function startReview(){
-  if (!current || rec) return;
+  if (!current || rec || (mail && mail.open)) return;
   rec = 'starting';                       // block double-starts
   try{
     await ensureAudio();
@@ -650,9 +696,24 @@ async function startReview(){
       canWrite = false;
       warn('Can’t write into the Drive folder — this review will download to your Downloads folder instead.');
     }
+    aacName = ''; aacWritable = null; aacParts = null; aacChain = Promise.resolve(); aacHandle = null;
+    const framer = plan && plan.amux === 'aac' ? adtsFramer(plan.acfg.sampleRate, plan.acfg.numberOfChannels) : null;
+    let audioSink = null;
+    if (framer){
+      aacName = recFileName.replace(/\.mp4$/, '.aac');
+      if (recWritable){
+        try{
+          const fb = await current.dirHandle.getDirectoryHandle('_feedback', {create:true});
+          aacHandle = await fb.getFileHandle(aacName, {create:true});
+          aacWritable = await aacHandle.createWritable();
+        }catch(e){ console.warn('audio sidecar', e); aacName = ''; }
+      } else aacParts = [];
+      if (aacName) audioSink = c => { const b = framer(c);
+        if (aacWritable) aacChain = aacChain.then(() => aacWritable.write(b)); else aacParts.push(b); };
+    }
     if (plan){
       recTarget = recWritable ? new Mp4Muxer.FileSystemWritableFileStreamTarget(recWritable) : new Mp4Muxer.ArrayBufferTarget();
-      session = startWebCodecs(plan, recTarget);
+      session = startWebCodecs(plan, recTarget, audioSink);
     } else {
       recChunks = [];
       session = startMediaRecorderWebm(chunk => {
@@ -693,18 +754,25 @@ async function stopReview(save=true){
   $('recState').textContent = save ? 'Saving…' : 'Discarding…';
   const durationSec = +((performance.now()-recStart)/1000).toFixed(1);
   const it = current, s = session;
+  let handoff = null;
   session = null;                         // stop feeding frames
   try{
     if (!save){
       await s.abort();
       if (recWritable){ try{ await recWritable.abort(); }catch(e){}
         try{ const fb = await it.dirHandle.getDirectoryHandle('_feedback'); await fb.removeEntry(recFileName); }catch(e){} }
+      if (aacWritable){ try{ await aacChain; await aacWritable.abort(); }catch(e){}
+        try{ const fb = await it.dirHandle.getDirectoryHandle('_feedback'); await fb.removeEntry(aacName); }catch(e){} }
       toast('Review discarded.');
     } else {
       await s.finish();
       await recChain;
+      await aacChain;
+      let recordingBytes = 0, audioBytes = 0;
+      if (recWritable){ await recWritable.close(); recordingBytes = (await recFileHandle.getFile()).size; }
+      if (aacWritable){ await aacWritable.close(); audioBytes = (await aacHandle.getFile()).size; }
       const meta = {
-        version: 1,
+        version: 2,
         course: 'JOUR 71107 Fundamentals of Visual Reporting — Fall 2026',
         student: it.student,
         assignment: it.assignment,
@@ -712,6 +780,9 @@ async function stopReview(save=true){
         recordingFile: recFileName,
         recordedAt: new Date().toISOString(),
         mimeType: recMime,
+        recordingBytes,
+        audioFile: aacName || null,
+        audioBytes,
         recordingDurationSec: durationSec,
         submissionDurationSec: +(vid.duration||0).toFixed(2),
         markers, events,
@@ -720,14 +791,15 @@ async function stopReview(save=true){
       const json = JSON.stringify(meta, null, 2);
       const jsonName = recFileName.replace(/\.(mp4|webm)$/, '.json');
       if (recWritable){
-        await recWritable.close();
         const fb = await it.dirHandle.getDirectoryHandle('_feedback', {create:true});
         const jh = await fb.getFileHandle(jsonName, {create:true});
         const jw = await jh.createWritable(); await jw.write(json); await jw.close();
-        toast('Saved to ' + it.assignment + ' / _feedback — Drive will upload it.', 'ok', 7000);
+        toast('Saved to ' + it.assignment + ' / _feedback.', 'ok', 5000);
+        if (aacName && audioBytes && GOOGLE_CLIENT_ID) handoff = {it, meta, aacHandle};
       } else {
         const blob = recTarget ? new Blob([recTarget.buffer], {type:'video/mp4'}) : new Blob(recChunks, {type:'video/webm'});
         download(blob, recFileName);
+        if (aacParts && aacParts.length) download(new Blob(aacParts, {type:'audio/aac'}), aacName);
         download(new Blob([json], {type:'application/json'}), jsonName);
         toast('Downloaded ' + recFileName, 'ok', 7000);
       }
@@ -736,16 +808,109 @@ async function stopReview(save=true){
   }catch(e){
     console.error(e); toast('Saving failed: ' + e.message, 'err', 12000);
   }
-  rec = null; recWritable = null; recChunks = null; recTarget = null; stopping = false;
+  rec = null; recWritable = null; recChunks = null; recTarget = null; aacWritable = null; aacParts = null; stopping = false;
   setRecUI(false);
   renderQueue();
   if (save){
     const next = queue.find(x => !x.done);
     if (next) $('tAssign').textContent = it.assignment + ' · saved. Next up: ' + next.student + ' (pick from the queue)';
   }
+  if (handoff) openMail(handoff);
 }
 function download(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 60000); }
+
+// ---------- step 2: email ----------
+let idToken = null, idExp = 0, mail = null;
+function initSignIn(){
+  if (!GOOGLE_CLIENT_ID){ $('gsiState').textContent = 'Email step isn’t set up yet — reviews still become Gmail drafts automatically.'; return; }
+  if (!(window.google && google.accounts && google.accounts.id)){ setTimeout(initSignIn, 300); return; }
+  google.accounts.id.initialize({client_id: GOOGLE_CLIENT_ID, callback: onSignIn, auto_select: true,
+    hd: 'journalism.cuny.edu', use_fedcm_for_prompt: true});
+  google.accounts.id.renderButton($('gsiBtn'), {theme:'filled_black', size:'medium', text:'signin_with', shape:'pill'});
+  google.accounts.id.prompt();
+}
+function onSignIn(r){
+  idToken = r.credential;
+  try{
+    const b = r.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    const p = JSON.parse(atob(b + '==='.slice((b.length + 3) % 4)));
+    idExp = p.exp * 1000; $('gsiState').textContent = 'Signed in: ' + p.email;
+  }catch(e){ idExp = Date.now() + 50*60000; $('gsiState').textContent = 'Signed in'; }
+  $('gsiBtn').style.display = 'none';
+  if (mail && mail.open && mail.waitingForSignIn) summarize();
+}
+function signedIn(){ return !!idToken && Date.now() < idExp - 60000; }
+function needSignIn(){
+  idToken = null; $('gsiBtn').style.display = ''; $('gsiState').textContent = 'Sign in to write and send emails here.';
+  try{ google.accounts.id.prompt(); }catch(e){}
+}
+async function api(payload){
+  if (!signedIn()){ needSignIn(); throw new Error('sign in with Google first (left side)'); }
+  const res = await fetch(BACKEND, {method:'POST', body: JSON.stringify(Object.assign({action:'review', idToken}, payload))});
+  const j = await res.json();
+  if (!j.ok){ if (/sign/i.test(j.error || '')) needSignIn(); throw new Error(j.error || 'server error'); }
+  return j;
+}
+function blobToB64(blob){
+  return new Promise((res, rej) => { const fr = new FileReader();
+    fr.onload = () => res(String(fr.result).split(',')[1] || ''); fr.onerror = () => rej(fr.error); fr.readAsDataURL(blob); });
+}
+function mailStatus(t){ $('mailStatus').textContent = t; }
+function mailButtons(){
+  const ok = !!(mail && mail.drafted && mail.ready && !mail.busy);
+  $('mailSend').disabled = !ok; $('mailDraft').disabled = !ok; $('mailSkip').disabled = !!(mail && mail.busy);
+}
+function openMail(h){
+  mail = {open:true, it:h.it, meta:h.meta, aacHandle:h.aacHandle, drafted:false, ready:false, busy:false};
+  $('mailTitle').textContent = 'Email to ' + h.it.student + ' — ' + h.it.assignment;
+  $('mailTo').value = ''; $('mailSubject').value = ''; $('mailBody').value = '';
+  $('mail').style.display = 'flex'; mailButtons();
+  if (!GOOGLE_CLIENT_ID){ mailStatus('Sign-in isn’t set up yet, so this review will arrive as a Gmail draft automatically. Click Skip to continue.'); return; }
+  summarize(); pollReady(mail);
+}
+async function summarize(){
+  if (!signedIn()){ mail.waitingForSignIn = true; needSignIn(); mailStatus('Sign in with Google (left side) to write the email here.'); return; }
+  mail.waitingForSignIn = false;
+  const m = mail;
+  mailStatus('Listening to your review and writing a summary… (usually 20–60 seconds)');
+  try{
+    const audio = await blobToB64(await m.aacHandle.getFile());
+    const r = await api({step:'summarize', meta: m.meta, audio});
+    if (!m.open) return;
+    $('mailTo').value = r.to || ''; $('mailSubject').value = r.subject || ''; $('mailBody').value = r.body || '';
+    m.drafted = true;
+    mailStatus((r.problem ? 'Summary failed (' + r.problem + ') — write a few lines yourself. ' : 'Edit anything you like. ') +
+      (m.ready ? 'Video is on Drive — ready to send.' : 'Waiting for Drive to finish uploading the video…'));
+  }catch(e){
+    if (!m.open) return;
+    m.drafted = true;   // still lets you write it by hand
+    mailStatus('Couldn’t write the summary: ' + e.message);
+  }
+  mailButtons();
+}
+async function pollReady(m){
+  while (m.open && !m.ready){
+    if (signedIn()){
+      try{ const r = await api({step:'status', meta: m.meta});
+        if (r.ready){ m.ready = true; if (m.drafted) mailStatus('Video is on Drive — ready to send.'); } }catch(e){}
+    }
+    if (!m.ready) await new Promise(r => setTimeout(r, 10000));
+  }
+  mailButtons();
+}
+async function mailAct(step){
+  if (!mail || mail.busy) return;
+  const to = $('mailTo').value.trim();
+  mail.busy = true; mailButtons();
+  mailStatus(step === 'send' ? 'Sending…' : step === 'draft' ? 'Saving draft…' : 'Skipping…');
+  try{
+    await api({step, meta: mail.meta, to, subject: $('mailSubject').value.trim(), text: $('mailBody').value});
+    toast(step === 'send' ? 'Sent to ' + to + '.' : step === 'draft' ? 'Saved to your Gmail drafts.' : 'Skipped — no email for this one.', 'ok', 6000);
+    closeMail();
+  }catch(e){ mail.busy = false; mailButtons(); mailStatus('That didn’t work: ' + e.message); }
+}
+function closeMail(){ if (mail) mail.open = false; mail = null; $('mail').style.display = 'none'; }
 
 // ---------- wiring ----------
 $('pickBtn').onclick = pickFolder;
@@ -760,11 +925,15 @@ $('discardBtn').onclick = ()=>{
   stopReview(false);
 };
 $('camBtn').onclick = toggleCam;
+$('mailSend').onclick = () => mailAct('send');
+$('mailDraft').onclick = () => mailAct('draft');
+$('mailSkip').onclick = () => (GOOGLE_CLIENT_ID && signedIn()) ? mailAct('skip') : closeMail();
 function toggleCam(){ camOn = !camOn; $('camBtn').textContent = 'Cam: ' + (camOn?'on':'off'); logEvent(camOn?'cam-on':'cam-off'); }
 $('vidVol').oninput = e => { if (vidGainRec) vidGainRec.gain.value = e.target.value/100; };
 
 document.addEventListener('keydown', e=>{
-  if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
+  if ((e.target.tagName === 'INPUT' && e.target.type !== 'range') || e.target.tagName === 'TEXTAREA') return;
+  if (mail && mail.open) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   switch(e.key){
     case ' ': e.preventDefault(); togglePlay(); break;
@@ -783,6 +952,7 @@ window.addEventListener('beforeunload', e=>{ if (rec){ e.preventDefault(); e.ret
 
 if (!window.showDirectoryPicker && params.get('test') !== 'opfs') warn('Open this page in Google Chrome — Safari can’t save into folders.');
 tryReconnect();
+initSignIn();
 
 // test hook
 window.__rs = { pickFolder, scan, loadItem: i=>loadItem(queue[i]), startReview, stopReview, startMarker, commitMarker, get queue(){return queue;} };
