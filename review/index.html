@@ -54,7 +54,64 @@
   .asg{display:flex;align-items:center;gap:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--muted)}
   select{background:var(--surface-alt);border:1px solid var(--gray);padding:8px 10px;min-height:40px;font-weight:600;text-transform:none;letter-spacing:0;font-size:15px;color:var(--white)}
   #who{font-size:12px;color:var(--muted);text-align:right}
-  .cols{flex:1;display:grid;grid-template-columns:300px 1fr 290px;min-height:0}
+  .cols{flex:1;display:grid;grid-template-columns:290px 1fr 360px;min-height:0}
+  .seg{display:flex;border:1px solid var(--gray)}
+  .seg button{border:0;border-right:1px solid var(--gray);min-height:40px;padding:8px 14px;text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-display);font-size:17px;background:none}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--orange);color:#000}
+  .chips{display:flex;gap:4px}
+  .chip{width:24px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#000;background:var(--gray);font-style:normal}
+  .chip.missing{background:transparent;border:2px solid #555;color:#777}
+  .chip.todo{background:var(--orange)} .chip.writing{background:var(--sky)} .chip.ready{background:var(--yellow)}
+  .chip.sent,.chip.drafted{background:var(--lime)} .chip.queued{background:transparent;border:2px solid var(--lime);color:var(--lime)}
+  .chip.in{background:#d8d8d8} .chip.reviewed,.chip.skipped{background:var(--gray)}
+  .legend .chip{width:16px;height:12px;font-size:0}
+  .stages{display:flex;padding:0 16px;border-bottom:1px solid var(--line);min-height:0}
+  .stage{background:none;border:0;border-bottom:3px solid transparent;padding:7px 14px 8px;min-height:0;text-align:left;display:flex;flex-direction:column;gap:1px}
+  .stage .t{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.05em;font-size:17px}
+  .stage .s{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+  .stage.on{border-bottom-color:var(--orange)}
+  .stage:hover:not(:disabled){background:var(--surface-alt)}
+  .pitchview{position:absolute;inset:14px;display:flex;flex-direction:column;gap:10px;z-index:4;background:var(--surface)}
+  .pitchview .doc{flex:1;overflow:auto;background:#f6f3ee;color:#1b1b1b;padding:30px 40px;font:16px/1.6 Georgia,serif;box-shadow:0 0 0 1px var(--line)}
+  .doc h3{font:700 24px/1.15 var(--font-display);text-transform:uppercase;letter-spacing:.02em;margin:0 0 4px}
+  .doc .meta{font:12px var(--font-text);color:#666;margin-bottom:16px}
+  .doc p{margin:0 0 12px;white-space:pre-wrap}
+  .compose{display:flex;flex-direction:column;gap:8px;background:var(--surface-alt);border:1px solid var(--line);border-top:3px solid var(--orange);padding:10px 12px}
+  .compose textarea{background:#000;border:1px solid var(--line);color:var(--text);padding:8px 10px;min-height:70px;resize:vertical;font:inherit}
+  .compose .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .compose .q{font-size:12px;color:var(--orange-75)}
+  .compose .q button{min-height:0;padding:0 6px;font-size:11px;margin-left:6px}
+  .center.pitching .transport,.center.pitching .bottom{display:none}
+  .tabs{display:flex;border-bottom:1px solid var(--line)}
+  .tabs button{flex:1;border:0;border-bottom:3px solid transparent;background:none;min-height:50px;font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .tabs button.on{border-bottom-color:var(--orange)}
+  .tabs .n{font-family:var(--font-text);font-size:11px;background:var(--yellow);color:#000;padding:1px 6px;margin-left:6px;vertical-align:2px}
+  .tabs .n:empty{display:none}
+  .ctx{overflow:auto;flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+  .card{background:var(--surface-alt);border:1px solid var(--line);flex:none}
+  .card>header{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer}
+  .card>header h3{margin:0;flex:1;font-family:var(--font-display);text-transform:uppercase;letter-spacing:.05em;font-size:16px}
+  .card>header small{color:var(--muted);font-size:11px;text-align:right}
+  .card .body{padding:10px 12px;font-size:14px;border-top:1px solid var(--line)}
+  .card.closed .body{display:none}
+  .clamp{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+  .lnk{color:var(--orange);cursor:pointer;font-size:13px;font-weight:600;background:none;border:0;padding:0;min-height:0;text-decoration:none}
+  .links{margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+  .mini{position:relative;aspect-ratio:16/9;background:#111 center/cover no-repeat;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:1px solid var(--line)}
+  .mini i{width:44px;height:44px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:18px}
+  .mini video,.mini iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+  .moments{list-style:none;margin:8px 0 0;padding:0;font-size:13px}
+  .moments li{padding:3px 0;border-top:1px solid #333}
+  .moments .t{color:var(--orange);font-variant-numeric:tabular-nums;margin-right:6px;font-weight:700}
+  .ai{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--sky);border:1px solid var(--sky);padding:0 4px;margin-right:4px}
+  .cmt{border-top:1px solid #333;padding:7px 0;font-size:13px}
+  .cmt .by{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+  .cmt .by b{color:var(--text)} .cmt.mine .by b{color:var(--orange)}
+  .cmt blockquote{margin:2px 0 4px;padding-left:8px;border-left:2px solid var(--gray);color:var(--muted);font-style:italic}
+  .cmt .rep{margin:5px 0 0 12px}
+  .cmt p{margin:0;white-space:pre-wrap}
+  .mailtext{white-space:pre-wrap;font-size:13px;color:#ddd;background:#000;padding:8px;margin-top:6px;max-height:260px;overflow:auto}
   .col{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
   .col:last-child{border-right:0;border-left:1px solid var(--line)}
   .col h2{font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:20px;white-space:nowrap;gap:8px;margin:0;padding:14px 16px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
@@ -138,7 +195,7 @@
 <div class="app" id="app" hidden>
   <header class="top">
     <h1 class="neon">Newmark Video Review-a-Tron</h1>
-    <label class="asg">Assignment <select id="asgSel"></select></label>
+    <div class="seg" id="projSeg"></div>
     <button id="folderBtn">Connect submissions folder</button>
     <span class="grow"></span>
     <div id="who"></div><div id="gsiAgain"></div>
@@ -149,10 +206,10 @@
       <h2>Students <small id="stuCount"></small></h2>
       <div class="list" id="stuList"></div>
       <div class="legend">
-        <span><i class="sw missing"></i>Not turned in</span><span><i class="sw todo"></i>Needs review</span>
-        <span><i class="sw writing"></i>Writing email</span><span><i class="sw ready"></i>Email ready</span>
-        <span><i class="sw queued"></i>Queued to send</span><span><i class="sw sent"></i>Sent / drafted</span>
-        <span><i class="tag">LATE</i>Turned in late</span>
+        <span><i class="chip missing"></i>Not turned in</span><span><i class="chip todo"></i>Needs review</span>
+        <span><i class="chip writing"></i>Writing email</span><span><i class="chip ready"></i>Email ready</span>
+        <span><i class="chip queued"></i>Queued to send</span><span><i class="chip sent"></i>Sent / noted</span>
+        <span><i class="chip in"></i>Pitch in</span><span><i class="tag">LATE</i>Turned in late</span>
       </div>
     </aside>
 
@@ -164,12 +221,22 @@
         <button id="recBtn" class="rec" disabled>● Start review</button>
         <button id="discardBtn" hidden>Discard</button>
       </div>
+      <div class="stages" id="stages"></div>
       <div class="stagewrap" id="stageWrap">
         <div class="screen" id="screen">
           <video id="vid" playsinline preload="auto"></video>
           <canvas id="overlay" width="1280" height="720"></canvas>
         </div>
         <div class="empty" id="empty">Pick a student on the left. Your camera is in the corner so you can line up the shot.</div>
+        <div class="pitchview" id="pitchView" hidden>
+          <div class="doc" id="pitchDoc"></div>
+          <div class="compose">
+            <div class="q" id="pitchQuote" hidden></div>
+            <textarea id="pitchNote" placeholder="Add a note on this pitch. Tip: select a passage in the pitch first to quote it."></textarea>
+            <div class="acts"><button id="pitchSend" class="primary">Post to their Doc + email</button>
+              <a class="lnk" id="pitchOpen" target="_blank" rel="noopener">Open Doc ↗</a><span id="pitchStatus" style="color:var(--muted);font-size:13px"></span></div>
+          </div>
+        </div>
         <div class="noteBox" id="noteBox">
           <span id="noteAt" style="color:var(--orange);font-variant-numeric:tabular-nums"></span>
           <input id="noteInput" placeholder="Marker note (optional) — Enter to save, Esc to cancel">
@@ -217,8 +284,9 @@
     </main>
 
     <aside class="col">
-      <h2>Emails <small id="mailCount"></small></h2>
-      <div class="list" id="mailList"></div>
+      <div class="tabs"><button id="tabCtx" class="on">This project</button><button id="tabMail">Emails<span class="n" id="mailCount"></span></button></div>
+      <div class="ctx" id="ctx"></div>
+      <div class="list" id="mailList" hidden></div>
     </aside>
   </div>
 </div>
@@ -263,6 +331,16 @@ let discardArmed = false, stopping = false, recTimer = null;
 let ptr = {x:0, y:0, t:0}, flash = null;
 let mail = null;
 let posterPromise = null, posterAt = 0;   // still frame + play button for the email
+// Projects group the assignments: pitch → rough → final
+const PROJECTS = [
+  {key:'otj', label:'On-the-job profile', stages:['otj-pitch','otj-rough','otj-final']},
+  {key:'story', label:'Final story', stages:['final-pitch','final-rough','final-final']},
+  {key:'ex', label:'5×5 exercises', stages:['shoot-5x5','edit-5x5']},
+];
+const STAGE_NAME = {pitch:'Pitch', rough:'Rough cut', final:'Final'};
+let projKey = null, stageKey = null, curEmail = null, sideTab = 'ctx';
+const pitchCache = {};          // docId -> pitch payload
+let pitchQuote = '';
 
 // ---------- helpers ----------
 function fmt(s){ if (!isFinite(s)) s = 0; s = Math.max(0, s); const m = Math.floor(s/60); return m + ':' + String(Math.floor(s - m*60)).padStart(2,'0'); }
@@ -340,30 +418,43 @@ function enterApp(){
 // ================= data =================
 async function refresh(){
   data = await api({step:'boot'});
-  const vids = data.assignments.filter(a => a.type === 'video');
-  const sel = $('asgSel');
-  if (!sel.options.length){
-    vids.forEach(a => { const o = document.createElement('option'); o.value = a.key;
-      o.textContent = a.label + ' — due ' + new Date(a.due).toLocaleDateString(undefined, {month:'short', day:'numeric'}); sel.appendChild(o); });
-    // default: the most recent assignment that has submissions
-    const withSubs = vids.filter(a => data.log.some(l => l.assignment === a.label));
-    asgKey = (withSubs.length ? withSubs[withSubs.length - 1] : vids[0]).key;
-    sel.value = asgKey;
+  if (!projKey){   // default: the project with the most recent submission
+    const last = data.log[data.log.length - 1];
+    const a = last && data.assignments.find(x => x.label === last.assignment);
+    projKey = (a && PROJECTS.find(p => p.stages.includes(a.key)) || PROJECTS[0]).key;
+    asgKey = proj().stages.find(k => byKey(k) && byKey(k).type === 'video') || proj().stages[0];
   }
   await loadLocalFeedback();
   render();
 }
 function asg(){ return data.assignments.find(a => a.key === asgKey); }
-function students(){
-  const a = asg(), list = [];
-  data.roster.forEach(r => {
+function byKey(k){ return data && data.assignments.find(a => a.key === k); }
+function proj(){ return PROJECTS.find(p => p.key === projKey) || PROJECTS[0]; }
+function stageWord(a){ const m = a.key.match(/-(pitch|rough|final)$/); return m ? STAGE_NAME[m[1]] : a.short; }
+function docIdOf(link){ const m = String(link || '').match(/\/d\/([\w-]{20,})/); return m ? m[1] : ''; }
+// One entry per stage of the current project for one roster student.
+function stagesFor(r){
+  return proj().stages.map(byKey).filter(Boolean).map(a => {
     const subs = data.log.filter(l => l.email === r.email && l.assignment === a.label);
     const sub = subs[subs.length - 1] || null;
-    if (/\(test\)/i.test(r.name) && !sub) return;
-    list.push(Object.assign({student: r.name, email: r.email, sub}, statusOf(sub, a)));
+    return Object.assign({a, student: r.name, email: r.email, sub}, a.type === 'pitch' ? pitchStatus(sub) : statusOf(sub, a));
   });
-  const order = {todo:0, writing:1, ready:2, reviewed:3, queued:4, drafted:5, sent:6, skipped:7, missing:8};
-  return list.sort((x, y) => (order[x.status] - order[y.status]) || x.student.localeCompare(y.student));
+}
+function pitchStatus(sub){
+  if (!sub) return {status:'missing', label:'Not turned in'};
+  const docId = docIdOf(sub.link), late = /^late/i.test(sub.onTime);
+  const r = data.reviews.find(x => x.base === 'pitch:' + docId);
+  return r ? {status:'sent', label:'Notes sent', docId, late, review:r} : {status:'in', label:'Turned in', docId, late};
+}
+function students(){
+  const list = [];
+  data.roster.forEach(r => {
+    const st = stagesFor(r);
+    if (/\(test\)/i.test(r.name) && !st.some(s => s.sub)) return;
+    list.push({student: r.name, email: r.email, stages: st});
+  });
+  const need = s => s.stages.some(x => ['todo','ready'].includes(x.status)) ? 0 : s.stages.some(x => x.sub) ? 1 : 2;
+  return list.sort((x, y) => need(x) - need(y) || lastFirst(x.student).localeCompare(lastFirst(y.student)));
 }
 function statusOf(sub, a){
   if (!sub) return {status:'missing', label:'Not turned in'};
@@ -389,24 +480,31 @@ function statusOf(sub, a){
 
 function render(){
   if (!data) return;
+  // project switcher
+  const seg = $('projSeg'); seg.innerHTML = '';
+  PROJECTS.forEach(p => { const b = document.createElement('button'); b.textContent = p.label; if (p.key === projKey) b.className = 'on';
+    b.onclick = () => switchProject(p.key); seg.appendChild(b); });
   const list = students(), box = $('stuList'); box.innerHTML = '';
-  const turnedIn = list.filter(s => s.sub).length;
-  $('stuCount').textContent = `${turnedIn}/${list.length} turned in`;
+  $('stuCount').textContent = `${list.filter(s => s.stages.some(x => x.sub)).length}/${list.length} started`;
   list.forEach(s => {
     const el = document.createElement('div');
-    el.className = 'row' + (s.status === 'missing' ? ' dim' : '') + (current && current.email === s.email ? ' active' : '');
-    el.innerHTML = `<i class="sw ${s.status}"></i><span class="nm"></span>${s.late ? '<i class="tag">LATE</i>' : ''}<span class="st"></span>`;
+    el.className = 'row' + (curEmail === s.email ? ' active' : '') + (s.stages.some(x => x.sub) ? '' : ' dim');
+    el.innerHTML = '<span class="nm"></span><span class="chips"></span>';
     el.querySelector('.nm').textContent = s.student;
-    el.querySelector('.st').textContent = s.label;
-    if (s.status !== 'missing') el.onclick = () => loadStudent(s);
+    s.stages.forEach(x => { const c = document.createElement('i'); c.className = 'chip ' + x.status;
+      c.textContent = projKey === 'ex' ? (x.a.key.startsWith('shoot') ? 'S' : 'E') : stageWord(x.a)[0];
+      c.title = x.a.label + ': ' + x.label + (x.late ? ' (late)' : ''); el.querySelector('.chips').appendChild(c); });
+    if (s.stages.some(x => x.late)) el.querySelector('.nm').insertAdjacentHTML('afterend', '<i class="tag">LATE</i>');
+    el.onclick = () => selectStudent(s.email);
     box.appendChild(el);
   });
+  renderStages(); renderSide();
   // emails column: everything waiting on you, all assignments
   const ready = data.reviews.filter(r => /^(Email ready|Writing|Queued)/i.test(r.status))
     .sort((x, y) => x.updated < y.updated ? -1 : 1);
   const extra = [...pending].filter(b => !ready.some(r => r.base === b));
   const mb = $('mailList'); mb.innerHTML = '';
-  $('mailCount').textContent = ready.filter(r => /^Email ready/i.test(r.status)).length + ' ready';
+  $('mailCount').textContent = ready.filter(r => /^Email ready/i.test(r.status)).length || '';
   extra.forEach(b => mb.appendChild(mailRow({student: studentFromBase(b), assignment: '', status:'Writing email…', base:b})));
   ready.forEach(r => mb.appendChild(mailRow(r)));
   if (!mb.children.length) mb.innerHTML = '<div class="empty-note">Nothing waiting. Finished reviews show up here while the summary is written, then turn yellow when the email is ready. Sent emails wait here (hollow green) until Drive can play the video.</div>';
@@ -423,8 +521,204 @@ function mailRow(r){
   return el;
 }
 function shortAsg(label){ const a = data && data.assignments.find(x => x.label === label); return a ? a.short : label; }
-$('asgSel').onchange = async e => { if (rec){ e.target.value = asgKey; toast('Finish the current review first.','err'); return; }
-  asgKey = e.target.value; await loadLocalFeedback(); render(); };
+
+// ================= projects, stages, side panel =================
+function curStudent(){ return curEmail && students().find(s => s.email === curEmail); }
+function curStage(){ const s = curStudent(); return s && s.stages.find(x => x.a.key === stageKey); }
+async function switchProject(k){
+  if (rec){ toast('Finish the current review first.', 'err'); return; }
+  if (mail) closeMail();
+  projKey = k; asgKey = proj().stages.find(x => byKey(x) && byKey(x).type === 'video');
+  await loadLocalFeedback();
+  if (curEmail){ const s = curStudent(); stageKey = s ? pickStage(s) : null; await openStage(); } else render();
+}
+function pickStage(s){   // the stage that needs you, else the latest one turned in
+  const need = s.stages.find(x => x.status === 'todo'); if (need) return need.a.key;
+  const done = s.stages.filter(x => x.sub); return (done[done.length - 1] || s.stages[0]).a.key;
+}
+async function selectStudent(email){
+  if (rec){ toast('Stop or discard the current review first.', 'err'); return; }
+  if (!root){ await reconnectNow(); }
+  curEmail = email; const s = curStudent(); stageKey = pickStage(s);
+  await openStage();
+}
+async function openStage(){
+  const x = curStage();
+  if (mail) closeMail();
+  pitchQuote = ''; $('pitchQuote').hidden = true; $('pitchStatus').textContent = '';
+  if (!x){ render(); return; }
+  if (x.a.type === 'video'){ asgKey = x.a.key; await loadLocalFeedback(); }
+  $('pitchView').hidden = x.a.type !== 'pitch'; $('center').classList.toggle('pitching', x.a.type === 'pitch');
+  if (x.a.type === 'pitch' || !x.sub){
+    vid.onerror = null; vid.onloadedmetadata = null; vid.pause(); vid.removeAttribute('src'); vid.load(); current = null;
+    ['playBtn','scrub','markBtn','recBtn'].forEach(id => $(id).disabled = true);
+    $('tStudent').textContent = x.student; $('tAssign').textContent = x.a.label + (x.sub ? '' : ' · not turned in yet');
+    $('empty').style.display = x.sub ? 'none' : 'flex'; $('empty').textContent = x.sub ? '' : 'Not turned in yet.';
+    render();
+    if (x.a.type === 'pitch' && x.sub) showPitch(x);
+    return;
+  }
+  await loadStudent(x);
+}
+function renderStages(){
+  const box = $('stages'); box.innerHTML = '';
+  const s = curStudent(); if (!s){ box.style.display = 'none'; return; }
+  box.style.display = 'flex';
+  s.stages.forEach(x => {
+    const b = document.createElement('button'); b.className = 'stage' + (x.a.key === stageKey ? ' on' : '');
+    b.innerHTML = '<span class="t"></span><span class="s"></span>';
+    b.querySelector('.t').textContent = projKey === 'ex' ? x.a.short : stageWord(x.a);
+    const due = x.a.due ? ' · due ' + new Date(x.a.due).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : '';
+    b.querySelector('.s').textContent = x.label + due + (x.late ? ' · late' : '');
+    b.disabled = !x.sub || !!rec;
+    b.onclick = () => { stageKey = x.a.key; openStage(); };
+    box.appendChild(b);
+  });
+}
+async function getPitch(docId, force){
+  if (!force && pitchCache[docId]) return pitchCache[docId];
+  const p = await api({step:'pitch', docId}); pitchCache[docId] = p; return p;
+}
+async function showPitch(x){
+  const docId = x.docId;
+  $('pitchOpen').href = x.sub.link;
+  $('pitchSend').textContent = 'Post to their Doc + email ' + x.student.split(' ')[0];
+  $('pitchDoc').innerHTML = '<p style="color:#888">Loading the pitch…</p>';
+  try{
+    const p = await getPitch(docId);
+    if (curStage() !== null && stageKey !== x.a.key) return;
+    const paras = p.text.replace(/\r/g, '').split(/\n\s*\n|\n/).map(t => t.trim()).filter(Boolean);
+    const title = paras.length && paras[0] === p.title ? paras.shift() : x.sub.file;
+    $('pitchDoc').innerHTML = '<h3></h3><div class="meta"></div>' + paras.map(t => '<p>' + esc(t) + '</p>').join('');
+    $('pitchDoc').querySelector('h3').textContent = title;
+    $('pitchDoc').querySelector('.meta').textContent = x.student + ' · submitted ' + x.sub.when + (x.late ? ' · ' + x.sub.onTime : '');
+    renderSide();
+  }catch(e){ $('pitchDoc').innerHTML = '<p style="color:#a00"></p>'; $('pitchDoc').querySelector('p').textContent = 'Couldn’t load the pitch: ' + e.message; }
+}
+$('pitchDoc').addEventListener('mouseup', () => {
+  const t = String(window.getSelection() || '').trim();
+  if (t.length < 3) return;
+  pitchQuote = t.slice(0, 500);
+  $('pitchQuote').hidden = false;
+  $('pitchQuote').innerHTML = 'Quoting: “<span></span>”<button>✕</button>';
+  $('pitchQuote').querySelector('span').textContent = pitchQuote.length > 120 ? pitchQuote.slice(0, 120) + '…' : pitchQuote;
+  $('pitchQuote').querySelector('button').onclick = () => { pitchQuote = ''; $('pitchQuote').hidden = true; };
+});
+$('pitchSend').onclick = async () => {
+  const x = curStage(); if (!x || x.a.type !== 'pitch') return;
+  const text = $('pitchNote').value.trim(); if (!text){ $('pitchStatus').textContent = 'Write a note first.'; return; }
+  $('pitchSend').disabled = true; $('pitchStatus').textContent = 'Posting…';
+  try{
+    await api({step:'pitchNote', docId: x.docId, text, quote: pitchQuote});
+    $('pitchNote').value = ''; pitchQuote = ''; $('pitchQuote').hidden = true;
+    $('pitchStatus').textContent = 'Posted on the Doc and emailed to ' + x.email + '.';
+    await getPitch(x.docId, true); await refresh();
+  }catch(e){ $('pitchStatus').textContent = 'That didn’t work: ' + e.message; }
+  $('pitchSend').disabled = false;
+};
+$('tabCtx').onclick = () => { sideTab = 'ctx'; renderSide(); };
+$('tabMail').onclick = () => { sideTab = 'mail'; renderSide(); };
+function card(title, sub, open){
+  const c = document.createElement('section'); c.className = 'card' + (open ? '' : ' closed');
+  c.innerHTML = '<header><h3></h3><small></small></header><div class="body"></div>';
+  c.querySelector('h3').textContent = title; c.querySelector('small').textContent = sub || '';
+  c.querySelector('header').onclick = () => c.classList.toggle('closed');
+  return c;
+}
+function commentHTML(c){
+  const when = d => new Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+  return '<div class="cmt' + (c.me ? ' mine' : '') + '"><div class="by"><b>' + esc(c.who || '') + '</b> · ' + when(c.when) + (c.resolved ? ' · resolved' : '') + '</div>' +
+    (c.quote ? '<blockquote>' + esc(c.quote.length > 160 ? c.quote.slice(0, 160) + '…' : c.quote) + '</blockquote>' : '') +
+    '<p>' + esc(c.text) + '</p>' + (c.replies || []).map(r => '<div class="rep"><div class="by"><b>' + esc(r.who) + '</b> · ' + when(r.when) + '</div><p>' + esc(r.text) + '</p></div>').join('') + '</div>';
+}
+function renderSide(){
+  $('tabCtx').className = sideTab === 'ctx' ? 'on' : ''; $('tabMail').className = sideTab === 'mail' ? 'on' : '';
+  $('ctx').hidden = sideTab !== 'ctx'; $('mailList').hidden = sideTab !== 'mail';
+  if (sideTab !== 'ctx') return;
+  const box = $('ctx'), s = curStudent();
+  const keepOpen = new Set([...box.querySelectorAll('.card')].filter(c => !c.classList.contains('closed')).map(c => c.dataset.k));
+  const hadCards = box.querySelector('.card') && box.dataset.who === (curEmail + projKey + stageKey);
+  box.innerHTML = ''; box.dataset.who = curEmail + projKey + stageKey;
+  if (!s){ box.innerHTML = '<div class="empty-note">Pick a student. Their pitch and your earlier feedback for this project show up here.</div>'; return; }
+  const stageIdx = s.stages.findIndex(x => x.a.key === stageKey);
+  s.stages.forEach((x, i) => {
+    const open = hadCards ? keepOpen.has(x.a.key) : (i === stageIdx - 1 || i === stageIdx || x.a.type === 'pitch');
+    if (x.a.type === 'pitch'){
+      const c = card('Pitch', x.sub ? (x.label + ' · ' + (x.sub.when || '').split(' ')[0]) : 'Not turned in', open); c.dataset.k = x.a.key;
+      const body = c.querySelector('.body');
+      if (!x.sub){ body.innerHTML = '<span class="empty-note" style="padding:0">No pitch yet.</span>'; }
+      else {
+        const p = pitchCache[x.docId];
+        if (!p){ body.innerHTML = '<span style="color:var(--muted)">Loading…</span>';
+          getPitch(x.docId).then(() => { if (curEmail === s.email) renderSide(); }).catch(e => body.textContent = 'Couldn’t load: ' + e.message); }
+        else {
+          const text = p.text.replace(/\r/g, '').split('\n').map(t => t.trim()).filter(Boolean).filter(t => t !== p.title).join('\n');
+          body.innerHTML = '<div class="clamp"></div><div class="links"></div><div class="cm"></div>';
+          body.querySelector('.clamp').textContent = text;
+          const go = document.createElement('button'); go.className = 'lnk'; go.textContent = stageKey === x.a.key ? 'Pitch is open in the middle' : 'Read full pitch + add a note';
+          go.onclick = () => { stageKey = x.a.key; openStage(); };
+          const a = document.createElement('a'); a.className = 'lnk'; a.href = x.sub.link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Open Doc ↗';
+          body.querySelector('.links').append(go, a);
+          body.querySelector('.cm').innerHTML = p.comments.length ? '<div style="margin-top:10px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Comments on the Doc</div>' + p.comments.map(commentHTML).join('')
+            : '<div style="margin-top:10px;color:var(--muted);font-size:13px">No comments on the Doc yet.</div>';
+        }
+      }
+      box.appendChild(c); return;
+    }
+    if (!x.review) return;
+    const r = x.review;
+    const c = card('Your ' + (projKey === 'ex' ? x.a.short : stageWord(x.a).toLowerCase()) + ' feedback', x.label + ' · ' + r.updated.split(' ')[0], open);
+    c.dataset.k = x.a.key;
+    const body = c.querySelector('.body');
+    body.innerHTML = '<div class="mini" title="Play your recorded critique"><i>▶</i></div><p style="margin:0 0 6px"></p><ul class="moments"></ul><div class="links"></div><div class="mailtext" hidden></div>';
+    const mini = body.querySelector('.mini');
+    localPoster(x.a, r.base).then(u => { if (u) mini.style.backgroundImage = 'url(' + u + ')'; });
+    mini.onclick = () => playMini(mini, x.a, r);
+    const sum = body.querySelector('p');
+    if (r.summary){ sum.innerHTML = '<span class="ai">AI SUMMARY</span>'; sum.appendChild(document.createTextNode(r.summary)); }
+    else sum.textContent = /^Writing/.test(r.status) ? 'The summary is still being written…' : '';
+    String(r.moments || '').split('\n').filter(Boolean).forEach(line => {
+      const m = line.match(/^(\d+:\d\d)\s*—\s*(.*)$/); const li = document.createElement('li');
+      if (m){ li.innerHTML = '<span class="t"></span>'; li.firstChild.textContent = m[1]; li.appendChild(document.createTextNode(m[2])); } else li.textContent = line;
+      body.querySelector('.moments').appendChild(li);
+    });
+    const links = body.querySelector('.links');
+    const t = document.createElement('button'); t.className = 'lnk'; t.textContent = 'Show the email';
+    t.onclick = () => { const mt = body.querySelector('.mailtext'); mt.hidden = !mt.hidden; mt.textContent = r.body || '(no email text)'; t.textContent = mt.hidden ? 'Show the email' : 'Hide the email'; };
+    links.appendChild(t);
+    if (r.link){ const a = document.createElement('a'); a.className = 'lnk'; a.href = r.link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Student’s link ↗'; links.appendChild(a); }
+    if (/^(Email ready|Queued)/.test(r.status)){ const o = document.createElement('button'); o.className = 'lnk'; o.textContent = 'Open in email editor'; o.onclick = () => openMail(r); links.appendChild(o); }
+    box.appendChild(c);
+  });
+  if (!box.querySelector('.card .mini') && s.stages.some(x => x.a.type === 'video'))
+    box.insertAdjacentHTML('beforeend', '<div class="empty-note" style="padding:0">Your video feedback for this project will collect here, round by round.</div>');
+}
+async function feedbackFile(a, base, exts){
+  const d = await asgDir(a).catch(() => null); if (!d) return null;
+  try{ const fb = await d.getDirectoryHandle('_feedback');
+    for (const e of exts){ try{ return await (await fb.getFileHandle(base + e)).getFile(); }catch(err){} } }catch(e){}
+  return null;
+}
+const posterURLs = {};
+async function localPoster(a, base){
+  if (posterURLs[base] !== undefined) return posterURLs[base];
+  const f = await feedbackFile(a, base, ['.jpg']);
+  return posterURLs[base] = f && f.size > 2000 ? URL.createObjectURL(f) : null;
+}
+async function playMini(mini, a, r){
+  if (mini.querySelector('video,iframe')) return;
+  const f = await feedbackFile(a, r.base, ['.mp4', '.webm']);
+  if (f && f.size > 1000){
+    const v = document.createElement('video'); v.controls = true; v.autoplay = true; v.src = URL.createObjectURL(f); mini.appendChild(v);
+    vid.pause();
+  } else if (docIdOf(r.link)){
+    const i = document.createElement('iframe'); i.src = 'https://drive.google.com/file/d/' + docIdOf(r.link) + '/preview'; i.allow = 'autoplay'; mini.appendChild(i);
+  } else toast('Can’t find that recording on this Mac yet — Drive may still be syncing it.', 'err', 7000);
+}
+async function reconnectNow(){   // the click itself counts as permission to ask Chrome again
+  const h = await kvGet('root'); if (!h) return;
+  try{ if ((await h.requestPermission({mode:'readwrite'})) === 'granted'){ $('folderBtn').onclick = pickFolder; $('folderBtn').classList.remove('primary'); await useRoot(h, false); } }catch(e){}
+}
 
 // ================= folder =================
 async function pickFolder(){
@@ -479,9 +773,11 @@ async function asgDir(a){
 }
 async function loadLocalFeedback(){
   if (!root || !data) return;
-  const a = asg(), d = await asgDir(a); const s = new Set();
-  if (d){ try{ const fb = await d.getDirectoryHandle('_feedback'); for await (const [n] of fb.entries()) s.add(n); }catch(e){} }
-  localFeedback[a.label] = s;
+  for (const a of proj().stages.map(byKey).filter(x => x && x.type === 'video')){
+    const d = await asgDir(a).catch(() => null); const s = new Set();
+    if (d){ try{ const fb = await d.getDirectoryHandle('_feedback'); for await (const [n] of fb.entries()) s.add(n); }catch(e){} }
+    localFeedback[a.label] = s;
+  }
 }
 
 // ================= load a student's video =================
@@ -500,7 +796,7 @@ document.addEventListener('pointerdown', () => ensureAudio(), {once:true, captur
 async function loadStudent(s){
   if (rec){ toast('Stop or discard the current review first.', 'err'); return; }
   if (mail) closeMail();
-  if (!root){ toast('Connect the submissions folder first (top bar).', 'err'); return; }
+  if (!root){ toast('Connect the submissions folder first — click the orange button at the top.', 'err', 8000); render(); return; }
   await ensureAudio();
   const a = asg(), dir = await asgDir(a);
   if (!dir){ toast('Can’t find the folder for “' + a.label + '” in ' + root.name + '.', 'err', 8000); return; }
@@ -513,6 +809,7 @@ async function loadStudent(s){
   $('tStudent').textContent = s.student;
   $('tAssign').textContent = a.label + (s.late ? ' · turned in late' : '') + (['todo','missing'].includes(s.status) ? '' : ' · already reviewed — a new review is saved alongside');
   markers = []; renderMarkers(); render();
+  $('pitchView').hidden = true; $('center').classList.remove('pitching');
   const file = await fh.getFile();
   $('empty').style.display = 'none';
   if (objectURL) URL.revokeObjectURL(objectURL);
