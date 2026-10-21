@@ -577,7 +577,10 @@ function renderStages(){
 }
 async function getPitch(docId, force){
   if (!force && pitchCache[docId]) return pitchCache[docId];
-  const p = await api({step:'pitch', docId}); pitchCache[docId] = p; return p;
+  const p = await api({step:'pitch', docId});
+  // Docs' text export marks comments as [a], [b]… and lists them at the end; the comments are shown separately
+  p.text = String(p.text || '').replace(/\r/g, '').replace(/\n\[[a-z]{1,3}\][\s\S]*$/, '').replace(/\[[a-z]{1,3}\]/g, '').trim();
+  pitchCache[docId] = p; return p;
 }
 async function showPitch(x){
   const docId = x.docId;
