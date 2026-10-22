@@ -111,6 +111,13 @@
   .cmt blockquote{margin:2px 0 4px;padding-left:8px;border-left:2px solid var(--gray);color:var(--muted);font-style:italic}
   .cmt .rep{margin:5px 0 0 12px}
   .cmt p{margin:0;white-space:pre-wrap}
+  .sendbar{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:6;display:flex;gap:10px;align-items:center;background:var(--surface-alt);border:1px solid var(--line);border-top:4px solid var(--lime);padding:10px 14px;box-shadow:0 6px 30px #000c}
+  .sendbar span{font-size:14px;max-width:340px}
+  .summ{white-space:pre-wrap;margin:0 0 6px;font-size:14px;line-height:1.45}
+  .outrow{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #15191d}
+  .outrow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .outrow .st{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+  .outrow button{min-height:30px;padding:3px 10px;font-size:13px}
   .mailtext{white-space:pre-wrap;font-size:13px;color:#ddd;background:#000;padding:8px;margin-top:6px;max-height:260px;overflow:auto}
   .col{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
   .col:last-child{border-right:0;border-left:1px solid var(--line)}
@@ -207,8 +214,7 @@
       <div class="list" id="stuList"></div>
       <div class="legend">
         <span><i class="chip missing"></i>Not turned in</span><span><i class="chip todo"></i>Needs review</span>
-        <span><i class="chip writing"></i>Writing email</span><span><i class="chip ready"></i>Email ready</span>
-        <span><i class="chip queued"></i>Queued to send</span><span><i class="chip sent"></i>Sent / noted</span>
+        <span><i class="chip ready"></i>Ready to send</span>        <span><i class="chip queued"></i>Queued to send</span><span><i class="chip sent"></i>Sent / noted</span>
         <span><i class="chip in"></i>Pitch in</span><span><i class="tag">LATE</i>Turned in late</span>
       </div>
     </aside>
@@ -237,6 +243,7 @@
               <a class="lnk" id="pitchOpen" target="_blank" rel="noopener">Open Doc ↗</a><span id="pitchStatus" style="color:var(--muted);font-size:13px"></span></div>
           </div>
         </div>
+        <div class="sendbar" id="sendBar" hidden><span id="sendMsg"></span><button id="sendNow" class="primary">Send</button><button id="sendLater">Later</button></div>
         <div class="noteBox" id="noteBox">
           <span id="noteAt" style="color:var(--orange);font-variant-numeric:tabular-nums"></span>
           <input id="noteInput" placeholder="Marker note (optional) — Enter to save, Esc to cancel">
@@ -284,7 +291,7 @@
     </main>
 
     <aside class="col">
-      <div class="tabs"><button id="tabCtx" class="on">This project</button><button id="tabMail">Emails<span class="n" id="mailCount"></span></button></div>
+      <div class="tabs"><button id="tabCtx" class="on">This project</button><button id="tabMail">Outbox<span class="n" id="mailCount"></span></button></div>
       <div class="ctx" id="ctx"></div>
       <div class="list" id="mailList" hidden></div>
     </aside>
@@ -341,6 +348,8 @@ const STAGE_NAME = {pitch:'Pitch', rough:'Rough cut', final:'Final'};
 let projKey = null, stageKey = null, curEmail = null, sideTab = 'ctx';
 const pitchCache = {};          // docId -> pitch payload
 let pitchQuote = '';
+const localMeta = {};            // review base -> meta, for reviews recorded in this session
+const SUMMARY_PENDING = 'Writing the AI summary…';
 
 // ---------- helpers ----------
 function fmt(s){ if (!isFinite(s)) s = 0; s = Math.max(0, s); const m = Math.floor(s/60); return m + ':' + String(Math.floor(s - m*60)).padStart(2,'0'); }
@@ -411,7 +420,7 @@ function enterApp(){
   fitScreen();
   ensureMedia();       // camera bubble right away
   tryReconnect();
-  setInterval(() => { if (signedIn() && (pending.size || (data && data.reviews.some(r => /^Writing/.test(r.status))))) refresh().catch(()=>{}); }, 20000);
+  setInterval(() => { if (signedIn() && (pending.size || (data && data.reviews.some(r => r.summary === SUMMARY_PENDING)))) refresh().catch(()=>{}); }, 20000);
   setInterval(() => { if (signedIn() && !mail && data && data.reviews.some(r => /^Queued/.test(r.status))) refresh().catch(()=>{}); }, 120000);
 }
 
@@ -461,18 +470,18 @@ function statusOf(sub, a){
   const base = sub.file.replace(VIDEO_EXT, '');
   const late = /^late/i.test(sub.onTime);
   const prefix = base + ' — feedback';
-  if ([...pending].some(b => b.startsWith(prefix))) return {status:'writing', label:'Writing email…', base, late};
   const rows = data.reviews.filter(r => r.base.startsWith(prefix)).sort((x, y) => x.updated < y.updated ? 1 : -1);
   const r = rows[0];
   if (r){
     const s = r.status;
     if (/^Sent/i.test(s)) return {status:'sent', label:'Sent', base, late, review:r};
-    if (/^Queued/i.test(s)) return {status:'queued', label:'Queued', base, late, review:r};
+    if (/^Queued/i.test(s)) return {status:'queued', label:'Queued to send', base, late, review:r};
     if (/draft/i.test(s)) return {status:'drafted', label:'Gmail draft', base, late, review:r};
-    if (/^Skipped/i.test(s)) return {status:'skipped', label:'Skipped', base, late, review:r};
-    if (/^Writing/i.test(s)) return {status:'writing', label:'Writing email…', base, late, review:r};
-    return {status:'ready', label:'Email ready', base, late, review:r};
+    if (/^Skipped/i.test(s)) return {status:'skipped', label:'Not sent', base, late, review:r};
+    return {status:'ready', label:'Ready to send', base, late, review:r};
   }
+  const mine = [...pending].find(b => b.startsWith(prefix));
+  if (mine) return {status:'ready', label:'Ready to send', base, late, pendingBase: mine};
   const lf = localFeedback[a.label];
   if (lf && [...lf].some(n => n.startsWith(prefix) && /\.(mp4|webm)$/i.test(n))) return {status:'reviewed', label:'Reviewed', base, late};
   return {status:'todo', label:'Needs review', base, late};
@@ -499,16 +508,41 @@ function render(){
     box.appendChild(el);
   });
   renderStages(); renderSide();
-  // emails column: everything waiting on you, all assignments
-  const ready = data.reviews.filter(r => /^(Email ready|Writing|Queued)/i.test(r.status))
+  // outbox: recorded reviews not sent yet, and sends waiting on Drive
+  const out = data.reviews.filter(r => !/^pitch:/.test(r.base) && (/^Queued/i.test(r.status) || !/^(Sent|Skipped|Gmail draft)/i.test(r.status)))
     .sort((x, y) => x.updated < y.updated ? -1 : 1);
-  const extra = [...pending].filter(b => !ready.some(r => r.base === b));
+  const extra = [...pending].filter(b => !out.some(r => r.base === b) && !data.reviews.some(r => r.base === b));
   const mb = $('mailList'); mb.innerHTML = '';
-  $('mailCount').textContent = ready.filter(r => /^Email ready/i.test(r.status)).length || '';
-  extra.forEach(b => mb.appendChild(mailRow({student: studentFromBase(b), assignment: '', status:'Writing email…', base:b})));
-  ready.forEach(r => mb.appendChild(mailRow(r)));
-  if (!mb.children.length) mb.innerHTML = '<div class="empty-note">Nothing waiting. Finished reviews show up here while the summary is written, then turn yellow when the email is ready. Sent emails wait here (hollow green) until Drive can play the video.</div>';
+  const unsent = out.filter(r => !/^Queued/i.test(r.status)).length + extra.length;
+  $('mailCount').textContent = unsent || '';
+  extra.forEach(b => mb.appendChild(outRow({student: studentFromBase(b), assignment: localMeta[b] ? localMeta[b].assignmentLabel : '', status:'', base:b})));
+  out.forEach(r => mb.appendChild(outRow(r)));
+  if (!mb.children.length) mb.innerHTML = '<div class="empty-note">Nothing waiting. Reviews you haven’t sent show up here with a Send button; sent ones wait here (hollow green) until Drive can play the video.</div>';
 }
+function outRow(r){
+  const q = /^Queued/i.test(r.status);
+  const el = document.createElement('div'); el.className = 'outrow';
+  el.innerHTML = `<i class="sw ${q ? 'queued' : 'ready'}"></i><span class="nm"></span><span class="st"></span>`;
+  el.querySelector('.nm').textContent = r.student;
+  el.querySelector('.st').textContent = q ? 'Queued' : (shortAsg(r.assignment) || '');
+  if (!q){ const b = document.createElement('button'); b.className = 'primary'; b.textContent = 'Send';
+    b.onclick = () => sendReview(r.base, r.student, b); el.appendChild(b);
+    const k = document.createElement('button'); k.textContent = 'Don’t send'; k.title = 'Mark as not sent (no email)';
+    k.onclick = async () => { k.disabled = true; try{ await api({step:'skip', base: r.base}); await refresh(); }catch(e){ k.disabled = false; toast('That didn’t work: ' + e.message, 'err'); } };
+    if (data.reviews.some(x => x.base === r.base)) el.appendChild(k); }
+  return el;
+}
+async function sendReview(base, student, btn){
+  if (btn) btn.disabled = true;
+  try{
+    await api({step:'send', base, meta: localMeta[base] || null});
+    toast('Queued — ' + (student || 'the student') + ' gets the email once Drive can play the video (usually 10–20 min).', '', 7000);
+    if ($('sendBar').dataset.base === base) $('sendBar').hidden = true;
+    await refresh();
+  }catch(e){ if (btn) btn.disabled = false; toast('Couldn’t send: ' + e.message, 'err', 9000); }
+}
+$('sendNow').onclick = () => sendReview($('sendBar').dataset.base, $('sendBar').dataset.student, $('sendNow'));
+$('sendLater').onclick = () => { $('sendBar').hidden = true; toast('It’s waiting in the Outbox tab whenever you’re ready.', '', 5000); };
 function studentFromBase(b){ const m = b.match(/^([^,]+),\s*([^—]+)—/); return m ? m[2].trim() + ' ' + m[1].trim() : b; }
 function mailRow(r){
   const writing = /^Writing/i.test(r.status), queued = /^Queued/i.test(r.status);
@@ -544,6 +578,7 @@ async function selectStudent(email){
 }
 async function openStage(){
   const x = curStage();
+  if (!$('sendBar').hidden && (!x || !String($('sendBar').dataset.base || '').startsWith(String(x.base || '~') + ' — feedback'))) $('sendBar').hidden = true;
   if (mail) closeMail();
   pitchQuote = ''; $('pitchQuote').hidden = true; $('pitchStatus').textContent = '';
   if (!x){ render(); return; }
@@ -673,24 +708,31 @@ function renderSide(){
     const c = card('Your ' + (projKey === 'ex' ? x.a.short : stageWord(x.a).toLowerCase()) + ' feedback', x.label + ' · ' + r.updated.split(' ')[0], open);
     c.dataset.k = x.a.key;
     const body = c.querySelector('.body');
-    body.innerHTML = '<div class="mini" title="Play your recorded critique"><i>▶</i></div><p style="margin:0 0 6px"></p><ul class="moments"></ul><div class="links"></div><div class="mailtext" hidden></div>';
+    body.innerHTML = '<div class="mini" title="Play your recorded critique"><i>▶</i></div><div class="summ"></div><ul class="moments"></ul><div class="links"></div><div class="mailtext" hidden></div>';
     const mini = body.querySelector('.mini');
     localPoster(x.a, r.base).then(u => { if (u) mini.style.backgroundImage = 'url(' + u + ')'; });
     mini.onclick = () => playMini(mini, x.a, r);
-    const sum = body.querySelector('p');
-    if (r.summary){ sum.innerHTML = '<span class="ai">AI SUMMARY</span>'; sum.appendChild(document.createTextNode(r.summary)); }
-    else sum.textContent = /^Writing/.test(r.status) ? 'The summary is still being written…' : '';
+    const sum = body.querySelector('.summ');
+    sum.innerHTML = '<span class="ai">AI SUMMARY · JUST FOR YOU</span><br>';
+    sum.appendChild(document.createTextNode(r.summary || 'No summary yet.'));
     String(r.moments || '').split('\n').filter(Boolean).forEach(line => {
       const m = line.match(/^(\d+:\d\d)\s*—\s*(.*)$/); const li = document.createElement('li');
       if (m){ li.innerHTML = '<span class="t"></span>'; li.firstChild.textContent = m[1]; li.appendChild(document.createTextNode(m[2])); } else li.textContent = line;
       body.querySelector('.moments').appendChild(li);
     });
     const links = body.querySelector('.links');
+    if (!/^(Sent|Queued|Skipped|Gmail draft)/i.test(r.status)){
+      const sb = document.createElement('button'); sb.className = 'primary'; sb.style.cssText = 'min-height:30px;padding:3px 12px;font-size:13px';
+      sb.textContent = 'Send video to ' + String(r.student || '').split(' ')[0]; sb.onclick = () => sendReview(r.base, r.student, sb); links.appendChild(sb);
+    }
+    if (r.summary !== SUMMARY_PENDING){ const rw = document.createElement('button'); rw.className = 'lnk'; rw.textContent = 'Rewrite summary';
+      rw.onclick = async () => { rw.disabled = true; rw.textContent = 'Rewriting…';
+        try{ await api({step:'resummarize', base: r.base}); await refresh(); }catch(e){ toast('Couldn’t rewrite it: ' + e.message, 'err', 8000); rw.disabled = false; rw.textContent = 'Rewrite summary'; } };
+      links.appendChild(rw); }
     const t = document.createElement('button'); t.className = 'lnk'; t.textContent = 'Show the email';
     t.onclick = () => { const mt = body.querySelector('.mailtext'); mt.hidden = !mt.hidden; mt.textContent = r.body || '(no email text)'; t.textContent = mt.hidden ? 'Show the email' : 'Hide the email'; };
     links.appendChild(t);
     if (r.link){ const a = document.createElement('a'); a.className = 'lnk'; a.href = r.link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Student’s link ↗'; links.appendChild(a); }
-    if (/^(Email ready|Queued)/.test(r.status)){ const o = document.createElement('button'); o.className = 'lnk'; o.textContent = 'Open in email editor'; o.onclick = () => openMail(r); links.appendChild(o); }
     box.appendChild(c);
   });
   if (!box.querySelector('.card .mini') && s.stages.some(x => x.a.type === 'video'))
@@ -1135,7 +1177,12 @@ async function stopReview(save = true){
         }catch(e){ console.warn('poster', e); }
         const jw = await (await fb.getFileHandle(jsonName, {create:true})).createWritable(); await jw.write(json); await jw.close();
         handoff = {meta, audioFile: aacHandle && audioBytes ? aacHandle : null, student: it.student};
-        toast('Saved. The email for ' + it.student + ' is being written — pick your next student.', '', 6000);
+        const sb = recFileName.replace(/\.(mp4|webm)$/i, '');
+        localMeta[sb] = meta;
+        $('sendBar').dataset.base = sb; $('sendBar').dataset.student = it.student;
+        $('sendMsg').textContent = 'Review saved. Send it to ' + it.student + '?';
+        $('sendNow').textContent = 'Send video to ' + it.student.split(' ')[0]; $('sendNow').disabled = false;
+        $('sendBar').hidden = false;
       } else {
         download(recTarget ? new Blob([recTarget.buffer], {type:'video/mp4'}) : new Blob(recChunks, {type:'video/webm'}), recFileName);
         if (aacParts && aacParts.length) download(new Blob(aacParts, {type:'audio/aac'}), aacName);
@@ -1159,10 +1206,10 @@ function summarizeInBackground(h){
     try{
       const audio = h.audioFile ? await blobToB64(await h.audioFile.getFile()) : null;
       const r = await api({step:'summarize', meta: h.meta, audio});
-      toast('Email for ' + h.student + ' is ready' + (r.problem ? ' (summary failed — write it yourself)' : '') + '.', r.problem ? 'err' : '', 5000);
+      if (r.problem) toast('The AI summary for ' + h.student + ' failed (' + r.problem + ') — use “Rewrite summary” on their card later.', 'err', 9000);
     }catch(e){
       if (!signedIn()){ queued.push(run); return; }   // retried right after you sign in again
-      toast('Couldn’t write the email for ' + h.student + ': ' + e.message + ' — the hourly sweep will try again.', 'err', 10000);
+      toast('Couldn’t start the AI summary for ' + h.student + ' (' + e.message + ') — the hourly sweep will try again. Sending still works.', 'err', 10000);
     }
     pending.delete(base);
     await refresh().catch(()=>{});
