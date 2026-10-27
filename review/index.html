@@ -269,7 +269,7 @@
         <span id="diag"></span>
         <input type="range" id="scrub" min="0" max="1000" value="0" disabled aria-label="Position">
         <button id="markBtn" disabled title="Marker (M)">⚑ Marker</button>
-        <button id="camBtn" title="Webcam bubble (C)">Cam: on</button>
+        <button id="camBtn" title="Webcam bubble + mic (C). Off = camera light off and mic closed; recording still turns the mic on.">Cam + mic: on</button>
         <span class="meter" title="Mic level"><i id="meter"></i></span>
         <label class="sm">Video vol in recording <input type="range" id="vidVol" min="0" max="100" value="70"></label>
       </div>
@@ -328,6 +328,7 @@ let current = null;           // {student, sub, base, dir, fileName, asg}
 let objectURL = null;
 
 let actx = null, recDest = null, vidGainRec = null, micStream = null, micConnected = false, analyser = null;
+let camStream = null, micSrcNode = null, meterTimer = null;
 let camOn = true;
 
 let rec = null, session = null, recWritable = null, recChunks = null, recChain = Promise.resolve();
@@ -713,7 +714,7 @@ function renderSide(){
     localPoster(x.a, r.base).then(u => { if (u) mini.style.backgroundImage = 'url(' + u + ')'; });
     mini.onclick = () => playMini(mini, x.a, r);
     const sum = body.querySelector('.summ');
-    sum.innerHTML = '<span class="ai">AI SUMMARY · JUST FOR YOU</span><br>';
+    sum.innerHTML = '<span class="ai">AI SUMMARY · GOES IN THE EMAIL</span><br>';
     sum.appendChild(document.createTextNode(r.summary || 'No summary yet.'));
     String(r.moments || '').split('\n').filter(Boolean).forEach(line => {
       const m = line.match(/^(\d+:\d\d)\s*—\s*(.*)$/); const li = document.createElement('li');
@@ -882,7 +883,7 @@ function pill(c, txt, x, y, bg, fg, size){
 function drawScene(c, recorded){
   if (recorded){ c.fillStyle = '#000'; c.fillRect(0,0,W,H); if (current && vid.readyState >= 2) drawContain(c, vid, vid.videoWidth, vid.videoHeight); }
   else c.clearRect(0,0,W,H);
-  if (camOn && micStream && cam.readyState >= 2){
+  if (camOn && camStream && cam.readyState >= 2){
     const d = 200, cx = W - d/2 - 28, cy = H - d/2 - 28;
     c.save(); c.beginPath(); c.arc(cx, cy, d/2, 0, Math.PI*2); c.closePath(); c.clip();
     const vw = cam.videoWidth, vh = cam.videoHeight, s = Math.max(d/vw, d/vh);
@@ -966,26 +967,44 @@ function renderMarkers(){
 }
 
 // ================= camera + mic (on as soon as you're signed in) =================
+// Camera and mic are opened separately so each can be fully released (camera light off, mic closed).
+// Mic: open while "Cam + mic" is on, and always while recording. Camera: only while it's on.
+const live = s => !!(s && s.getTracks().some(t => t.readyState === 'live'));
 async function ensureMedia(){
-  if (micStream) return true;
   try{
-    micStream = await navigator.mediaDevices.getUserMedia({
-      video: {width:{ideal:640}, height:{ideal:480}, frameRate:{ideal:30}},
-      audio: {echoCancellation:true, noiseSuppression:true, autoGainControl:true}});
-  }catch(e){ toast('Camera/mic blocked (' + e.name + '). Allow them in Chrome’s address bar, then reload.', 'err', 9000); return false; }
-  cam.srcObject = micStream; cam.play().catch(()=>{});
+    if (!live(micStream)){
+      micStream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation:true, noiseSuppression:true, autoGainControl:true}});
+      micConnected = false;
+    }
+    if (camOn && !live(camStream)){
+      camStream = await navigator.mediaDevices.getUserMedia({video: {width:{ideal:640}, height:{ideal:480}, frameRate:{ideal:30}}});
+      cam.srcObject = camStream; cam.play().catch(()=>{});
+    }
+  }catch(e){ toast('Camera/mic blocked (' + e.name + '). Allow them in Chrome’s address bar, then reload.', 'err', 9000); return live(micStream); }
   connectMic();
   return true;
 }
+function releaseCam(){
+  if (camStream){ camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  cam.srcObject = null;
+}
+function releaseMic(){
+  if (micSrcNode){ try{ micSrcNode.disconnect(); }catch(e){} micSrcNode = null; }
+  if (micStream){ micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  micConnected = false; $('meter').style.width = '0%';
+}
 function connectMic(){
-  if (!actx || !micStream || micConnected) return;
+  if (!actx || !live(micStream) || micConnected) return;
   micConnected = true;
-  const micSrc = actx.createMediaStreamSource(new MediaStream(micStream.getAudioTracks()));
-  micSrc.connect(recDest);
-  analyser = actx.createAnalyser(); analyser.fftSize = 512; micSrc.connect(analyser);
-  const buf = new Uint8Array(analyser.fftSize);
-  setInterval(() => { analyser.getByteTimeDomainData(buf); let pk = 0; for (const v of buf) pk = Math.max(pk, Math.abs(v - 128));
-    $('meter').style.width = Math.min(100, pk/128*180) + '%'; }, 80);
+  micSrcNode = actx.createMediaStreamSource(new MediaStream(micStream.getAudioTracks()));
+  micSrcNode.connect(recDest);
+  if (!analyser){ analyser = actx.createAnalyser(); analyser.fftSize = 512; }
+  micSrcNode.connect(analyser);
+  if (!meterTimer){
+    const buf = new Uint8Array(analyser.fftSize);
+    meterTimer = setInterval(() => { if (!micSrcNode) return; analyser.getByteTimeDomainData(buf); let pk = 0; for (const v of buf) pk = Math.max(pk, Math.abs(v - 128));
+      $('meter').style.width = Math.min(100, pk/128*180) + '%'; }, 80);
+  }
 }
 
 // ================= recording engines =================
@@ -1192,6 +1211,7 @@ async function stopReview(save = true){
     }
   }catch(e){ console.error(e); toast('Saving failed: ' + e.message, 'err', 12000); }
   rec = null; recWritable = null; recChunks = null; recTarget = null; aacWritable = null; aacParts = null; stopping = false;
+  if (!camOn) releaseMic();
   setRecUI(false);
   if (handoff) summarizeInBackground(handoff);
   await loadLocalFeedback(); render();
@@ -1287,7 +1307,11 @@ $('discardBtn').onclick = () => {
     setTimeout(() => { if (rec){ discardArmed = false; $('discardBtn').textContent = 'Discard'; } }, 3000); return; }
   stopReview(false);
 };
-function toggleCam(){ camOn = !camOn; $('camBtn').textContent = 'Cam: ' + (camOn ? 'on' : 'off'); logEvent(camOn ? 'cam-on' : 'cam-off'); }
+function toggleCam(){
+  camOn = !camOn; $('camBtn').textContent = 'Cam + mic: ' + (camOn ? 'on' : 'off'); logEvent(camOn ? 'cam-on' : 'cam-off');
+  if (camOn) ensureMedia();
+  else { releaseCam(); if (!rec) releaseMic(); }   // while recording, the mic stays on so your voice is still captured
+}
 $('camBtn').onclick = toggleCam;
 $('vidVol').oninput = e => { if (vidGainRec) vidGainRec.gain.value = e.target.value / 100; };
 document.addEventListener('keydown', e => {
