@@ -526,21 +526,24 @@ function outRow(r){
   el.innerHTML = `<i class="sw ${q ? 'queued' : 'ready'}"></i><span class="nm"></span><span class="st"></span>`;
   el.querySelector('.nm').textContent = r.student;
   el.querySelector('.st').textContent = q ? 'Queued' : (shortAsg(r.assignment) || '');
-  if (!q){ const b = document.createElement('button'); b.className = 'primary'; b.textContent = 'Send';
+  if (!q){ const b = document.createElement('button'); b.className = 'primary'; b.textContent = 'Review & send';
     b.onclick = () => sendReview(r.base, r.student, b); el.appendChild(b);
     const k = document.createElement('button'); k.textContent = 'Don’t send'; k.title = 'Mark as not sent (no email)';
     k.onclick = async () => { k.disabled = true; try{ await api({step:'skip', base: r.base}); await refresh(); }catch(e){ k.disabled = false; toast('That didn’t work: ' + e.message, 'err'); } };
     if (data.reviews.some(x => x.base === r.base)) el.appendChild(k); }
   return el;
 }
+// Opens the email editor for a review (nothing is sent until you press Send there).
 async function sendReview(base, student, btn){
   if (btn) btn.disabled = true;
   try{
-    await api({step:'send', base, meta: localMeta[base] || null});
-    toast('Queued — ' + (student || 'the student') + ' gets the email once Drive can play the video (usually 10–20 min).', '', 7000);
-    if ($('sendBar').dataset.base === base) $('sendBar').hidden = true;
-    await refresh();
-  }catch(e){ if (btn) btn.disabled = false; toast('Couldn’t send: ' + e.message, 'err', 9000); }
+    let r = data.reviews.find(x => x.base === base);
+    for (let i = 0; !r && i < 6; i++){ await new Promise(res => setTimeout(res, 2000)); await refresh(); r = data.reviews.find(x => x.base === base); }
+    if (!r){ toast('Still saving that review — try again from the Outbox in a moment.', 'err', 7000); return; }
+    $('sendBar').hidden = true;
+    openMail(r);
+  }catch(e){ toast('Couldn’t open the email: ' + e.message, 'err', 9000); }
+  finally{ if (btn) btn.disabled = false; }
 }
 $('sendNow').onclick = () => sendReview($('sendBar').dataset.base, $('sendBar').dataset.student, $('sendNow'));
 $('sendLater').onclick = () => { $('sendBar').hidden = true; toast('It’s waiting in the Outbox tab whenever you’re ready.', '', 5000); };
@@ -724,7 +727,7 @@ function renderSide(){
     const links = body.querySelector('.links');
     if (!/^(Sent|Queued|Skipped|Gmail draft)/i.test(r.status)){
       const sb = document.createElement('button'); sb.className = 'primary'; sb.style.cssText = 'min-height:30px;padding:3px 12px;font-size:13px';
-      sb.textContent = 'Send video to ' + String(r.student || '').split(' ')[0]; sb.onclick = () => sendReview(r.base, r.student, sb); links.appendChild(sb);
+      sb.textContent = 'Review & send email'; sb.onclick = () => sendReview(r.base, r.student, sb); links.appendChild(sb);
     }
     if (r.summary !== SUMMARY_PENDING){ const rw = document.createElement('button'); rw.className = 'lnk'; rw.textContent = 'Rewrite summary';
       rw.onclick = async () => { rw.disabled = true; rw.textContent = 'Rewriting…';
@@ -1200,7 +1203,7 @@ async function stopReview(save = true){
         localMeta[sb] = meta;
         $('sendBar').dataset.base = sb; $('sendBar').dataset.student = it.student;
         $('sendMsg').textContent = 'Review saved. Send it to ' + it.student + '?';
-        $('sendNow').textContent = 'Send video to ' + it.student.split(' ')[0]; $('sendNow').disabled = false;
+        $('sendNow').textContent = 'Review & send email to ' + it.student.split(' ')[0]; $('sendNow').disabled = false;
         $('sendBar').hidden = false;
       } else {
         download(recTarget ? new Blob([recTarget.buffer], {type:'video/mp4'}) : new Blob(recChunks, {type:'video/webm'}), recFileName);
@@ -1244,10 +1247,12 @@ function openMail(r){
   vid.pause();
   mail = {base: r.base, ready:false, busy:false, dirty:false, open:true};
   $('mailTitle').textContent = r.student + ' — ' + shortAsg(r.assignment);
-  $('mailTo').value = r.to || ''; $('mailSubject').value = r.subject || ''; $('mailBody').value = r.body || '';
+  $('mailTo').value = r.to || ''; $('mailSubject').value = r.subject || ''; $('mailBody').value = r.draft || r.body || '';
   $('mail').style.display = 'flex'; $('center').classList.add('mailing'); mailButtons(); render();
-  mailStatus(/^Queued/i.test(r.status) ? 'Queued — it goes out once Drive can play the video. Send again to replace the text, or Skip to cancel.'
-    : 'Edit anything, then Send. It goes out as soon as Drive can play the video. The link goes where it says [video link].');
+  const pendingSum = !r.edited && r.summary === SUMMARY_PENDING;
+  mailStatus(/^Queued/i.test(r.status) ? 'Queued — it goes out once Drive can play the video. Edits you make here are kept (Close saves them), or Skip to cancel.'
+    : pendingSum ? 'The AI summary is still being written. If you send without changing the text, it’s added automatically before the email goes out.'
+    : 'Edit anything, then Send. It goes out once Drive can play the video. The link goes where it says [video link].');
   pollReady(mail);
 }
 ['mailTo','mailSubject','mailBody'].forEach(id => $(id).addEventListener('input', () => { if (mail) mail.dirty = true; }));
@@ -1268,7 +1273,8 @@ async function mailAct(step){
   mail.busy = true; mailButtons();
   mailStatus(step === 'send' ? 'Sending…' : step === 'draft' ? 'Saving draft…' : 'Skipping…');
   try{
-    await api({step, base: mail.base, to, subject: $('mailSubject').value.trim(), text: $('mailBody').value});
+    // unchanged text isn't sent along, so the server can still fill in an AI summary that's being written
+    await api({step, base: mail.base, to, subject: $('mailSubject').value.trim(), text: (step === 'send' && !mail.dirty) ? '' : $('mailBody').value});
     toast(step === 'send' ? 'Queued — it goes to ' + to + ' once Drive can play the video (usually 10–20 min).' : step === 'draft' ? 'Saved to your Gmail drafts.' : 'Skipped — no email for this one.', '', 6000);
     mail.dirty = false; closeMail(); await refresh();
   }catch(e){ mail.busy = false; mailButtons(); mailStatus('That didn’t work: ' + e.message); }
@@ -1289,7 +1295,7 @@ $('mailRedo').onclick = async () => {
   const m = mail; m.busy = true; mailButtons(); mailStatus('Rewriting the summary — about a minute…');
   try{
     const r = await api({step:'resummarize', base: m.base});
-    if (mail === m){ $('mailBody').value = r.body; m.dirty = false;
+    if (mail === m){ $('mailBody').value = r.draft || $('mailBody').value; m.dirty = false;
       mailStatus(r.problem ? 'Gemini failed again: ' + r.problem : 'New summary in. Edit anything, then Send.'); }
     refresh().catch(()=>{});
   }catch(e){ if (mail === m) mailStatus('That didn’t work: ' + e.message); }
