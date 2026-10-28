@@ -114,7 +114,8 @@
   .sendbar{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:6;display:flex;gap:10px;align-items:center;background:var(--surface-alt);border:1px solid var(--line);border-top:4px solid var(--lime);padding:10px 14px;box-shadow:0 6px 30px #000c}
   .sendbar span{font-size:14px;max-width:340px}
   .summ{white-space:pre-wrap;margin:0 0 6px;font-size:14px;line-height:1.45}
-  .outrow{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #15191d}
+  .outrow{display:flex;align-items:center;gap:6px 10px;padding:9px 14px;border-bottom:1px solid #15191d;flex-wrap:wrap}
+  .outrow .acts{flex-basis:100%;display:flex;gap:8px;align-items:center;padding-left:22px}
   .outrow:hover{background:var(--surface-alt)}
   .outrow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .outrow .st{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
@@ -528,11 +529,13 @@ function outRow(r){
   el.innerHTML = `<i class="sw ${q ? 'queued' : 'ready'}"></i><span class="nm"></span><span class="st"></span>`;
   el.querySelector('.nm').textContent = r.student;
   el.querySelector('.st').textContent = q ? 'Queued' : (shortAsg(r.assignment) || '');
+  const acts = document.createElement('div'); acts.className = 'acts'; el.appendChild(acts);
+  if (q){ const b = document.createElement('button'); b.textContent = 'Open'; b.onclick = () => sendReview(r.base, r.student, b); acts.appendChild(b); }
   if (!q){ const b = document.createElement('button'); b.className = 'primary'; b.textContent = 'Review & send';
-    b.onclick = () => sendReview(r.base, r.student, b); el.appendChild(b);
+    b.onclick = () => sendReview(r.base, r.student, b); acts.appendChild(b);
     const k = document.createElement('button'); k.textContent = 'Don’t send'; k.title = 'Mark as not sent (no email)';
     k.onclick = async () => { k.disabled = true; try{ await api({step:'skip', base: r.base}); await refresh(); }catch(e){ k.disabled = false; toast('That didn’t work: ' + e.message, 'err'); } };
-    if (data.reviews.some(x => x.base === r.base)) el.appendChild(k); }
+    if (data.reviews.some(x => x.base === r.base)) acts.appendChild(k); }
   return el;
 }
 // Opens the email editor for a review (nothing is sent until you press Send there).
