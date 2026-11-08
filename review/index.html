@@ -1061,7 +1061,9 @@ function startWebCodecs(plan, target, audioSink, onTrouble){
   // Video encoder with a safety net: if Chrome's hardware encoder fails or never produces anything,
   // switch once to the software encoder and carry on; if that fails too, warn right away.
   let vchunks = 0, verr = null, firstEncodeAt = 0, swapped = false, warned = false;
-  const makeVE = cfg => { const e = new VideoEncoder({output:(c, m) => { vchunks++; muxer.addVideoChunk(c, m); },
+  // (Chrome 157+ leaves chunk.duration null unless the frame has one, which the muxer rejects — so frames carry a duration.)
+  const makeVE = cfg => { const e = new VideoEncoder({output:(c, m) => {
+      try{ muxer.addVideoChunk(c, m); vchunks++; }catch(e){ verr = e; console.error('mux', e); trouble(e); } },
     error:e => { verr = e; console.error('video encoder', e); }}); e.configure(cfg); return e; };
   let ve = makeVE(plan.vcfg);
   const trouble = e => { if (!warned){ warned = true; if (onTrouble) onTrouble(e); } };
@@ -1098,7 +1100,7 @@ function startWebCodecs(plan, target, audioSink, onTrouble){
       const idx = Math.round(ck.elapsed() / (1000/30)); if (idx <= lastIdx) return; lastIdx = idx;
       const ts = Math.round(idx * 1e6 / 30);
       let vf;
-      try{ vf = new VideoFrame(stage, {timestamp: ts}); }catch(e){ verr = e; trouble(e); return; }
+      try{ vf = new VideoFrame(stage, {timestamp: ts, duration: Math.round(1e6/30)}); }catch(e){ verr = e; trouble(e); return; }
       const key = ts - lastKey >= 2e6; if (key) lastKey = ts;
       try{ ve.encode(vf, {keyFrame: key}); if (!firstEncodeAt) firstEncodeAt = performance.now(); }catch(e){ verr = e; }
       vf.close();
