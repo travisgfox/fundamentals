@@ -1053,12 +1053,26 @@ function clock(){
     pause(){ if (!this.paused){ this.paused = true; pausedAt = performance.now(); } },
     resume(){ if (this.paused){ pausedTotal += performance.now() - pausedAt; this.paused = false; } } };
 }
-function startWebCodecs(plan, target, audioSink){
+function startWebCodecs(plan, target, audioSink, onTrouble){
   const muxer = new Mp4Muxer.Muxer({target, video:{codec:plan.vmux, width:W, height:H},
     audio:{codec:plan.amux, sampleRate:plan.acfg.sampleRate, numberOfChannels:plan.acfg.numberOfChannels},
     fastStart:false, firstTimestampBehavior:'offset'});
   let err = null, stopped = false, lastKey = -1e12, lastIdx = -1, samples = 0;
-  const ve = new VideoEncoder({output:(c, m) => muxer.addVideoChunk(c, m), error:e => { err = e; console.error(e); }}); ve.configure(plan.vcfg);
+  // Video encoder with a safety net: if Chrome's hardware encoder fails or never produces anything,
+  // switch once to the software encoder and carry on; if that fails too, warn right away.
+  let vchunks = 0, verr = null, firstEncodeAt = 0, swapped = false, warned = false;
+  const makeVE = cfg => { const e = new VideoEncoder({output:(c, m) => { vchunks++; muxer.addVideoChunk(c, m); },
+    error:e => { verr = e; console.error('video encoder', e); }}); e.configure(cfg); return e; };
+  let ve = makeVE(plan.vcfg);
+  const trouble = e => { if (!warned){ warned = true; if (onTrouble) onTrouble(e); } };
+  const fallback = () => {
+    if (swapped) return false;
+    swapped = true; console.warn('video encoder stalled/failed — switching to software', verr);
+    try{ ve.close(); }catch(e){}
+    verr = null; lastKey = -1e12; firstEncodeAt = 0;
+    try{ ve = makeVE(Object.assign({}, plan.vcfg, {hardwareAcceleration:'prefer-software'})); return true; }
+    catch(e){ verr = e; return false; }
+  };
   const ae = new AudioEncoder({output:(c, m) => { muxer.addAudioChunk(c, m); if (audioSink) audioSink(c); }, error:e => { err = e; console.error(e); }}); ae.configure(plan.acfg);
   const ck = clock();
   function encodeAudio(value){
@@ -1077,14 +1091,22 @@ function startWebCodecs(plan, target, audioSink){
   return Object.assign(ck, {
     format: `video/mp4 (${plan.vcfg.codec}, ${plan.acfg.codec})`,
     addFrame(){
-      if (stopped || ck.paused || ve.state !== 'configured' || ve.encodeQueueSize > 8) return;
+      if (stopped || ck.paused) return;
+      const stalled = vchunks === 0 && firstEncodeAt && performance.now() - firstEncodeAt > 3000;
+      if (ve.state !== 'configured' || stalled){ if (!fallback()){ trouble(verr || new Error('the video encoder stopped')); return; } }
+      if (ve.encodeQueueSize > 8) return;
       const idx = Math.round(ck.elapsed() / (1000/30)); if (idx <= lastIdx) return; lastIdx = idx;
       const ts = Math.round(idx * 1e6 / 30);
-      const vf = new VideoFrame(stage, {timestamp: ts}); const key = ts - lastKey >= 2e6; if (key) lastKey = ts;
-      ve.encode(vf, {keyFrame: key}); vf.close();
+      let vf;
+      try{ vf = new VideoFrame(stage, {timestamp: ts}); }catch(e){ verr = e; trouble(e); return; }
+      const key = ts - lastKey >= 2e6; if (key) lastKey = ts;
+      try{ ve.encode(vf, {keyFrame: key}); if (!firstEncodeAt) firstEncodeAt = performance.now(); }catch(e){ verr = e; }
+      vf.close();
     },
     async finish(){ stopped = true; try{ await plan.reader.cancel(); }catch(e){} plan.track.stop(); await pump;
-      if (ve.state === 'configured') await ve.flush(); if (ae.state === 'configured') await ae.flush();
+      if (ve.state === 'configured') await ve.flush().catch(e => { verr = e; });
+      if (ae.state === 'configured') await ae.flush();
+      if (!vchunks) throw new Error('no video was recorded (' + (verr ? (verr.message || verr.name) : 'the encoder produced nothing') + ')');
       muxer.finalize(); try{ ve.close(); ae.close(); }catch(e){} if (err) throw err; },
     async abort(){ stopped = true; try{ await plan.reader.cancel(); }catch(e){} plan.track.stop(); try{ ve.close(); ae.close(); }catch(e){} }
   });
@@ -1130,7 +1152,10 @@ async function startReview(){
     }
     if (plan){
       recTarget = recWritable ? new Mp4Muxer.FileSystemWritableFileStreamTarget(recWritable) : new Mp4Muxer.ArrayBufferTarget();
-      session = startWebCodecs(plan, recTarget, audioSink);
+      session = startWebCodecs(plan, recTarget, audioSink, e => {
+        warn('Video isn’t recording (' + ((e && (e.message || e.name)) || 'encoder error') + '). Click Discard and start the review again — if it repeats, reload the page.');
+        toast('Video isn’t recording — Discard and start again.', 'err', 12000);
+      });
     } else {
       recChunks = [];
       session = startMediaRecorderWebm(chunk => { if (recWritable) recChain = recChain.then(() => recWritable.write(chunk)); else recChunks.push(chunk); });
